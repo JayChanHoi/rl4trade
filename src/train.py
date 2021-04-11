@@ -4,14 +4,14 @@ import ray
 
 from tensorboardX import SummaryWriter
 
-from .rl.distributed.actor import ActorR2D2
-from .rl.distributed.learner import LearnerR2D2
-from .rl.distributed.parameter_server import ParameterServer
-from .rl.distributed.memory_server import MemoryServer
-from .rl.utils import write_config, resume
-from .agc_utils.agc import AGC
-from .rl.model.qnet import LSTMQNet
-from .env.env import BitcoinTradeEnv
+from rl.distributed.actor import ActorR2D2
+from rl.distributed.learner import LearnerR2D2
+from rl.distributed.parameter_server import ParameterServer
+from rl.distributed.memory_server import MemoryServer
+from rl.utils import write_config, resume
+from agc_utils.agc import AGC
+from rl.model.qnet import LSTMQNet
+from env.env import BitcoinTradeEnv
 
 import os
 from collections import namedtuple
