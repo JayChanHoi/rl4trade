@@ -148,13 +148,13 @@ class ActorR2D2():
                     self.local_memory.reset(0)
 
                 else:
-                    if self.local_memory.__len__() == self.sequence_length + 20 + self.nsteps + 1:
+                    if self.local_memory.__len__() == self.sequence_length + 20 + self.nstep + 1:
                         # transit to multi-step output
                         sequential_action = []
                         sequential_reward = []
                         sequential_state = []
                         sequential_dones = []
-                        for start_index in [i for i in range(self.sequence_length + 20 + self.nsteps + 1)]:
+                        for start_index in [i for i in range(self.sequence_length + 20 + self.nstep + 1)]:
                             if  20 <= start_index < self.sequence_length + 20:
                                 end_index = start_index + self.nsteps
                                 nstep_return_output = self.transit_to_nstep_return(start_index, end_index)
