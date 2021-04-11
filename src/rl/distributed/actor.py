@@ -106,13 +106,13 @@ class ActorR2D2():
         action_value, _ = self.actor_net(sequential_state_input, sequential_initial_hidden_state)
         action_value = action_value.squeeze()
 
-        dones_ = dones[20+self.nsteps+1:]
-        reward_ = reward[20:-self.nsteps-1]
+        dones_ = dones[20+self.nstep+1:]
+        reward_ = reward[20:-self.nstep-1]
         non_terminal_mask = 1 - dones_.float()
         terminal_mask = dones_.float()
-        action_value_target = rescale((reward_ + (self.gamma ** (self.nsteps + 1))*inv_rescale(action_value[20+self.nsteps+1:, :].max(dim=1)[0])) * non_terminal_mask + reward_ * terminal_mask)
+        action_value_target = rescale((reward_ + (self.gamma ** (self.nstep + 1))*inv_rescale(action_value[20+self.nstep+1:, :].max(dim=1)[0])) * non_terminal_mask + reward_ * terminal_mask)
 
-        td_error = (action_value_target - action_value[20+self.nsteps+1:, :].gather(1, actions[20+self.nsteps+1:].view(-1, 1)).view(-1)).abs() + 0.01
+        td_error = (action_value_target - action_value[20+self.nstep+1:, :].gather(1, actions[20+self.nstep+1:].view(-1, 1)).view(-1)).abs() + 0.01
         priority = (0.9 * td_error.max() + 0.1 * td_error.mean()).view(1)
 
         return priority
@@ -156,7 +156,7 @@ class ActorR2D2():
                         sequential_dones = []
                         for start_index in [i for i in range(self.sequence_length + 20 + self.nstep + 1)]:
                             if  20 <= start_index < self.sequence_length + 20:
-                                end_index = start_index + self.nsteps
+                                end_index = start_index + self.nstep
                                 nstep_return_output = self.transit_to_nstep_return(start_index, end_index)
                                 sequential_reward.append(nstep_return_output[0])
                                 sequential_dones.append(nstep_return_output[1])
@@ -186,7 +186,7 @@ class ActorR2D2():
                             [sequential_priority]
                         ])
 
-                        self.local_memory.reset(self.nsteps+self.sequence_length)
+                        self.local_memory.reset(self.nstep+self.sequence_length)
 
                 if self.act_count % self.actor_update_frequency == 0 and self.act_count > 0:
                     self.update_agent_from_learner()
