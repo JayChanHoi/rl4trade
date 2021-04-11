@@ -61,7 +61,7 @@ class LearnerR2D2(object):
         writer.add_scalar(tag=tag, scalar_value=value, global_step=global_step)
 
     def eval(self, qnet):
-        state = self.eval_env.reset()
+        obs = self.eval_env.reset()
 
         reward_list = []
         episode_length = 0
@@ -70,13 +70,13 @@ class LearnerR2D2(object):
 
         for iter in count():
             if qnet is not None:
-                action_value, hidden_state = qnet(state.unsqueeze(0).unsqueeze(0), hidden_state)
+                action_value, hidden_state = qnet(torch.from_numpy(obs).float().unsqueeze(0).unsqueeze(0).cuda(), hidden_state)
                 action = action_value.argmax(dim=2).squeeze()
             else:
                 # sample action
                 action = random.randint(0, 3)
 
-            state, reward, done, _ = self.eval_env.step(action)
+            obs, reward, done, _ = self.eval_env.step(action)
             reward_list.append(reward)
             episode_length += 1
 

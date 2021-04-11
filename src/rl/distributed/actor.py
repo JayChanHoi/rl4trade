@@ -133,7 +133,7 @@ class ActorR2D2():
                 self.local_memory.actions.append(action)
                 self.local_memory.hidden_state_buffer.append(hidden_state)
 
-                obs, reward, done = self.env.step(action)
+                obs, reward, done, _ = self.env.step(action)
 
                 self.local_memory.rewards.append(reward)
                 self.local_memory.dones.append(done)
