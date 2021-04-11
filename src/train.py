@@ -90,7 +90,6 @@ def distributed_train(train_config):
                           agent_core_net=agent_core_net,
                           memory_size_bound=train_config.memory_size_bound,
                           optimizer=optimizer,
-                          gradient_clip=train_config.gradient_clip,
                           gamma=train_config.gamma,
                           update_lambda=train_config.update_lambda,
                           target_net_update_frequency=train_config.target_net_update_frequency,

@@ -23,7 +23,6 @@ class LearnerR2D2(object):
                  agent_core_net,
                  memory_size_bound,
                  optimizer,
-                 gradient_clip,
                  gamma,
                  nstep,
                  update_lambda,
@@ -53,7 +52,6 @@ class LearnerR2D2(object):
         self.nsteps = nstep
         self.update_lambda = update_lambda
         self.optimizer = optimizer
-        self.gradient_clip = gradient_clip
         self.writer = writer
         self.model_name = model_name
         self.eval_frequency = eval_frequency
