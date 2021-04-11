@@ -130,6 +130,7 @@ class ActorR2D2():
 
                 # sample action
                 action, hidden_state = self.epsilon_greedy_policy(torch.from_numpy(obs).float().unsqueeze(0).unsqueeze(0), hidden_state)
+                print('action', action)
                 self.local_memory.actions.append(action)
                 self.local_memory.hidden_state_buffer.append(hidden_state)
 
