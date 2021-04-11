@@ -28,7 +28,6 @@ class LearnerR2D2(object):
                  update_lambda,
                  target_net_update_frequency,
                  learner_start_update_memory_size,
-                 double_DQN,
                  model_name,
                  priority_alpha=0.6,
                  priority_beta=0.4,
@@ -43,7 +42,6 @@ class LearnerR2D2(object):
         self.batch_size = batch_size
         self.device = device
         self.train_count = 0
-        self.double_DQN = double_DQN
         self.priority_beta = priority_beta
         self.memory_size_bound = memory_size_bound
         self.target_net_update_frequency = target_net_update_frequency
