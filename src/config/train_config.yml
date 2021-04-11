@@ -11,6 +11,7 @@ eval_frequency: 200
 actor_update_frequency: 1000
 learner_start_update_memory_size: 1000
 model_name: R2D2_4_11_1
+resume: ''
 
 memory_size_bound: 10000
 priority_alpha: 0.6
