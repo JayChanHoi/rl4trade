@@ -20,8 +20,8 @@ class LocalMemoryR2D2(object):
     def __len__(self):
         return len(self.dones)
 
-    def reset(self, num_instance_to_keep):
-        if num_instance_to_keep:
+    def reset(self, num_instance_to_keep=0):
+        if num_instance_to_keep == 0:
             self.actions = []
             self.rewards = []
             self.obs = []
