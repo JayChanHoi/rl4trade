@@ -1,0 +1,5 @@
+ray==1.2.0
+tensorboardX==1.8
+ruamel-yaml==0.15.87
+numpy==1.20.1
+pandas==0.25.1
