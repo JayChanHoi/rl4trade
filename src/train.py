@@ -72,7 +72,8 @@ def distributed_train(train_config):
                                  device='cpu',
                                  nstep=train_config.nstep,
                                  env_config=env_config,
-                                 trade_data_path=data_path)
+                                 trade_data_path=data_path,
+                                 sequence_length=train_config.sequence_length)
         actors.append(actor)
 
     if torch.cuda.is_available():
@@ -81,7 +82,7 @@ def distributed_train(train_config):
     learner = LearnerR2D2(eval_env=eval_env,
                           eval_frequency=train_config.eval_frequency,
                           memory_server=memory_server,
-                          parameters_server=parameters_server,
+                          parameter_server=parameter_server,
                           writer=writer,
                           device=device,
                           batch_size=train_config.batch_size,

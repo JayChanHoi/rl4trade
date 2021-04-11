@@ -16,7 +16,7 @@ class LearnerR2D2(object):
                  eval_env,
                  eval_frequency,
                  memory_server,
-                 parameters_server,
+                 parameter_server,
                  writer,
                  device,
                  batch_size,
@@ -36,7 +36,7 @@ class LearnerR2D2(object):
                  hidden_state_dim=512,
                  sequence_length=30):
         self.memory_server = memory_server
-        self.parameters_server = parameters_server
+        self.parameter_server = parameter_server
         self.agent_core_net = agent_core_net
         self.target_net = deepcopy(self.agent_core_net)
         self.target_net.load_state_dict(self.agent_core_net.state_dict())
@@ -172,7 +172,7 @@ class LearnerR2D2(object):
                 self.write_log(self.writer, loss.item(), 'Loss', self.train_count)
 
                 if self.train_count > 0 and self.train_count % 10:
-                    self.parameters_server.update_ps_state_dict.remote({k:v.cpu() for k, v in self.agent_core_net.state_dict().items()})
+                    self.parameter_server.update_ps_state_dict.remote({k:v.cpu() for k, v in self.agent_core_net.state_dict().items()})
 
                 if self.train_count % self.target_net_update_frequency == 0 and self.train_count > 0:
                     self.target_net.load_state_dict({k: (1 - self.update_lambda)*v1 + self.update_lambda*v2 for k, v1, v2 in zip(self.agent_core_net.state_dict().keys(), self.target_net.state_dict().values(), self.agent_core_net.state_dict().values())})
