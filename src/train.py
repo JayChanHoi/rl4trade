@@ -71,7 +71,8 @@ def distributed_train(train_config):
                                  actor_alpha=train_config.actor_alpha,
                                  device='cpu',
                                  nstep=train_config.nstep,
-                                 env_config_path=env_config_path)
+                                 env_config=env_config,
+                                 trade_data_path=data_path)
         actors.append(actor)
 
     if torch.cuda.is_available():
