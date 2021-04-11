@@ -141,11 +141,7 @@ class ActorR2D2():
                 self.local_memory.dones.append(done)
 
                 if done:
-                    if self.episode_count % self.reset_env_order_frequency == 0:
-                        state = self.env.reset()
-                    else:
-                        state = self.reset()
-
+                    state = self.reset()
                     self.episode_count += 1
                     step_count = 0
 
