@@ -53,14 +53,14 @@ def distributed_train(train_config):
     optimizer = torch.optim.Adam(agent_core_net.parameters(), train_config.lr, eps=1.5e-4)
     optimizer = AGC(optim=optimizer, clipping=train_config.agc_clipping)
 
-    parameters_server = ParameterServer.remote({k: v.cpu() for k, v in agent_core_net.state_dict().items()})
+    parameter_server = ParameterServer.remote({k: v.cpu() for k, v in agent_core_net.state_dict().items()})
     memory_server = MemoryServer.remote(train_config.memory_size_bound)
 
     actors = []
     for i in range(train_config.actor_total_num):
         actor = ActorR2D2.remote(agent_core_net=agent_core_net,
                                  memory_server=memory_server,
-                                 parameters_server=parameters_server,
+                                 parameter_server=parameter_server,
                                  actor_id=i,
                                  actor_total_num=train_config.actor_total_num,
                                  memory_size_bound=train_config.memory_size_bound,
