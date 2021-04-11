@@ -82,7 +82,7 @@ class ActorR2D2():
         if random.random() < self.epsilon:
             action = random.randint(0,3)
         else:
-            action = action_value.argmax(dim=2).squeeze()
+            action = action_value.argmax(dim=2).squeeze().item()
 
         return action, hidden_state_output
 
@@ -139,7 +139,7 @@ class ActorR2D2():
                 self.local_memory.dones.append(done)
 
                 if done:
-                    obs = self.reset()
+                    obs = self.env.reset()
                     self.episode_count += 1
                     step_count = 0
 

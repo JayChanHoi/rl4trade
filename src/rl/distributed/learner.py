@@ -71,7 +71,7 @@ class LearnerR2D2(object):
         for iter in count():
             if qnet is not None:
                 action_value, hidden_state = qnet(torch.from_numpy(obs).float().unsqueeze(0).unsqueeze(0).cuda(), hidden_state)
-                action = action_value.argmax(dim=2).squeeze()
+                action = action_value.argmax(dim=2).squeeze().item()
             else:
                 # sample action
                 action = random.randint(0, 3)
