@@ -43,7 +43,6 @@ class ActorR2D2():
                  gamma,
                  nstep,
                  actor_update_frequency,
-                 reset_env_order_frequency,
                  memory_size_bound,
                  device,
                  memory_server,
@@ -63,7 +62,6 @@ class ActorR2D2():
         self.gamma = gamma
         self.nstep = nstep
         self.actor_update_frequency = actor_update_frequency
-        self.reset_env_order_frequency = reset_env_order_frequency
         self.memory_size_bound = memory_size_bound
         self.device = device
         self.memory_server = memory_server

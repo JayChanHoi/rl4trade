@@ -67,7 +67,6 @@ def distributed_train(train_config):
                                  gamma=train_config.gamma,
                                  update_lambda=train_config.update_lambda,
                                  actor_update_frequency=train_config.actor_update_frequency,
-                                 reset_env_order_frequency=train_config.reset_env_order_frequency,
                                  actor_epsilon=train_config.actor_epsilon,
                                  actor_alpha=train_config.actor_alpha,
                                  device='cpu',
