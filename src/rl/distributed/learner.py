@@ -105,42 +105,23 @@ class LearnerR2D2(object):
                 normalized_is_weight = is_weight / is_weight.max()
 
                 with torch.no_grad():
-                    burn_in_state = [
-                        batch_memory[2][:, :20, :, :, :],
-                        batch_memory[3][:, :20, :, :, :],
-                        batch_memory[4][:, :20, :, :, :],
-                        batch_memory[5][:, :20, :, :]
-                    ]
+                    burn_in_state = batch_memory[2][:, :20, :, :]
+
                     _, core_net_burn_in_final_hidden_state = self.agent_core_net(
                         burn_in_state,
-                        (batch_memory[7], batch_memory[8])
+                        (batch_memory[4], batch_memory[5])
                     )
 
-                update_state = [
-                    batch_memory[2][:, 20:-(self.nsteps+1), :, :, :],
-                    batch_memory[3][:, 20:-(self.nsteps+1), :, :, :],
-                    batch_memory[4][:, 20:-(self.nsteps+1), :, :, :],
-                    batch_memory[5][:, 20:-(self.nsteps+1), :, :]
-                ]
+                update_state = batch_memory[2][:, 20:-(self.nsteps+1), :, :]
                 action_value, final_hidden_state = self.agent_core_net(update_state, core_net_burn_in_final_hidden_state)
 
                 with torch.no_grad():
                     traget_net_action_value, _ = self.target_net(
-                        [
-                            batch_memory[2][:, 20+self.nsteps+1:, :, :, :],
-                            batch_memory[3][:, 20+self.nsteps+1:, :, :, :],
-                            batch_memory[4][:, 20+self.nsteps+1:, :, :, :],
-                            batch_memory[5][:, 20+self.nsteps+1:, :, :]
-                        ],
-                        (batch_memory[7], batch_memory[8])
+                        batch_memory[2][:, 20+self.nsteps+1:, :, :],
+                        (batch_memory[4], batch_memory[5])
                     )
                     action_value_extra, _ = self.agent_core_net(
-                        [
-                            batch_memory[2][:, -(self.nsteps+1):, :, :, :],
-                            batch_memory[3][:, -(self.nsteps+1):, :, :, :],
-                            batch_memory[4][:, -(self.nsteps+1):, :, :, :],
-                            batch_memory[5][:, -(self.nsteps+1):, :, :]
-                        ],
+                        batch_memory[2][:, -(self.nsteps+1):, :, :],
                         final_hidden_state
                     )
 
