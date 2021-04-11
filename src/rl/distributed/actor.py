@@ -126,10 +126,10 @@ class ActorR2D2():
 
         for _ in count():
             with torch.no_grad():
-                self.local_memory.obs.append(torch.from_numpy(obs))
+                self.local_memory.obs.append(torch.from_numpy(obs).float())
 
                 # sample action
-                action, hidden_state = self.epsilon_greedy_policy(torch.from_numpy(obs).unsqueeze(0).unsqueeze(0), hidden_state)
+                action, hidden_state = self.epsilon_greedy_policy(torch.from_numpy(obs).float().unsqueeze(0).unsqueeze(0), hidden_state)
                 self.local_memory.actions.append(action)
                 self.local_memory.hidden_state_buffer.append(hidden_state)
 
@@ -139,7 +139,7 @@ class ActorR2D2():
                 self.local_memory.dones.append(done)
 
                 if done:
-                    state = self.reset()
+                    obs = self.reset()
                     self.episode_count += 1
                     step_count = 0
 
