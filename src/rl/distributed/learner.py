@@ -74,7 +74,7 @@ class LearnerR2D2(object):
                 action = action_value.argmax(dim=2).squeeze().item()
             else:
                 # sample action
-                action = random.randint(0, 3)
+                action = random.randint(0, 2)
 
             obs, reward, done, _ = self.eval_env.step(action)
             reward_list.append(reward)

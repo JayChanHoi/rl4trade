@@ -80,7 +80,7 @@ class ActorR2D2():
             action_value, hidden_state_output = self.actor_net(state, hidden_state)
 
         if random.random() < self.epsilon:
-            action = random.randint(0,3)
+            action = random.randint(0,2)
         else:
             action = action_value.argmax(dim=2).squeeze().item()
 
