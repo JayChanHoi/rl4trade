@@ -4,7 +4,7 @@ sequence_length: 30
 
 batch_size: 256
 lr: 0.0000625
-agc_clipping: 0.32
+agc_clipping: 0.02
 gamma: 0.99
 dropout_p: 0.1
 eval_frequency: 200
