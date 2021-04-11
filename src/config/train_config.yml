@@ -7,7 +7,7 @@ lr: 0.0000625
 agc_clipping: 0.02
 gamma: 0.99
 dropout_p: 0.1
-eval_frequency: 200
+eval_frequency: 1000
 actor_update_frequency: 500
 learner_start_update_memory_size: 5000
 model_name: R2D2_4_11_1
