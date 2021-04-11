@@ -172,9 +172,7 @@ class ActorR2D2():
                             reward=torch.tensor(sequential_reward, dtype=torch.float),
                             dones=torch.tensor(sequential_dones, dtype=torch.bool),
                             actions=torch.stack(sequential_action, dim=0),
-                            sequential_state_input=[
-                                torch.stack(sequential_state, dim=0).unsqueeze(0),
-                            ],
+                            sequential_state_input=torch.stack(sequential_state, dim=0).unsqueeze(0),
                             sequential_initial_hidden_state=self.local_memory.hidden_state_buffer[0]
                         )
                         self.memory_server.receive_sample_from_actor.remote([
