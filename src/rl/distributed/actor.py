@@ -126,7 +126,7 @@ class ActorR2D2():
 
         for _ in count():
             with torch.no_grad():
-                self.local_memory_server.obs.append(state)
+                self.local_memory.obs.append(state)
 
                 # sample action
                 action, hidden_state = self.epsilon_greedy_policy(state.unsqueeze(0).unsqueeze(0), hidden_state)
