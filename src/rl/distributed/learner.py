@@ -167,7 +167,7 @@ class LearnerR2D2(object):
                         self.writer.add_scalars(main_tag='episodic investment return ', tag_scalar_dict={'random agent':episodic_investment_return}, global_step=self.train_count)
 
                 self.agent_core_net.train()
-                if self.train_count % 500 == 0 and self.train_count > 0:
+                if self.train_count % 5000 == 0 and self.train_count > 0:
                     if torch.cuda.device_count() > 1:
                         checkpoint_dict = {'iter': iter + 1, 'state_dict': self.agent_core_net.module.state_dict()}
                         torch.save(
