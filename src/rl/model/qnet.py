@@ -22,7 +22,7 @@ class LSTMQNet(nn.Module):
                  dropout_p,
                  hist_length):
         super(LSTMQNet, self).__init__()
-        self.state_encoder = StateEncoder()
+        self.state_encoder = StateEncoder(dropout_p)
         self.temporal_encoder = nn.LSTM(
             input_size=32*hist_length,
             hidden_size=512,
