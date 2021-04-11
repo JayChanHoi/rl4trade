@@ -1,4 +1,4 @@
-from utils import read_bitcoin_history
+from .utils import read_bitcoin_history
 import numpy as np
 
 class BitcoinTradeEnv():
