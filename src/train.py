@@ -24,8 +24,8 @@ def distributed_train(train_config):
     else:
         device = 'cpu'
 
-    data_path = os.path.join('/'.join(os.getcwd().split('/')[:-1]), 'data/Binance_BTCUSDT_minute.csv')
-    env_config_path = os.path.join(os.getcwd(), 'config/env_config.yml')
+    data_path = os.path.join(os.getcwd(), 'data/Binance_BTCUSDT_minute.csv')
+    env_config_path = os.path.join(os.getcwd(), 'src/config/env_config.yml')
     env_config_dict = yaml.load(open(env_config_path, 'r'))
     env_config = namedtuple('env_config', env_config_dict.keys())(**env_config_dict)
     eval_env = BitcoinTradeEnv(data_path, env_config)
