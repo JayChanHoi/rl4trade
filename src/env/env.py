@@ -65,6 +65,11 @@ class BitcoinTradeEnv():
 
         return obs
 
+    def get_action_mask(self):
+        mask = [1, self.current_cash_value - self.trading_open_price[self.trading_index+1], self.current_asset_unit - self.env_config.position_amount]
+
+        return np.greater_equal(np.array(mask), 0)
+
     def reset(self):
         self.act_count = 0
         self.current_cash_value = self.env_config.initial_cash_value
@@ -138,8 +143,8 @@ if __name__ == '__main__':
     from collections import namedtuple
     from itertools import count
 
-    data_path = os.path.join('/'.join(os.getcwd().split('/')[:-2]), 'data/Binance_BTCUSDT_minute.csv')
-    config_path = os.path.join('/'.join(os.getcwd().split('/')[:-1]), 'config/env_config.yml')
+    data_path = os.path.join('/'.join(os.getcwd().split('/')[:-1]), 'data/Binance_BTCUSDT_minute.csv')
+    config_path = os.path.join(os.getcwd(), 'config/env_config.yml')
     env_config = yaml.load(open(config_path, 'r'))
     env_config = namedtuple('env_config', env_config.keys())(**env_config)
     bitcon_trade_env = BitcoinTradeEnv(data_path, env_config)
@@ -148,6 +153,7 @@ if __name__ == '__main__':
     for _ in count():
         action = np.random.randint(0, 3)
         state, reward, done, _ = bitcon_trade_env.step(action)
+        print(bitcon_trade_env.get_action_mask())
         rewards.append(reward)
         print(action)
         print(state)
