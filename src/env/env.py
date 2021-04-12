@@ -13,12 +13,11 @@ class BitcoinTradeEnv():
         the obs is not yet normalized.
         :return:
         '''
+        raw_rep_list = [self.trading_records[trading_index-9:trading_index+1, :].reshape(-1) for trading_index in range(self.trading_index-3, self.trading_index+1)]
+        raw_rep = np.vstack(raw_rep_list)
         if self.act_count == 0:
-            raw_rep = self.trading_records[self.trading_index-3:self.trading_index+1, :]
             extra_rep = np.array([1, 0, 1, 0, 1, 0, 1, 0])*self.env_config.initial_cash_value
-            obs = np.concatenate([raw_rep, extra_rep.reshape(-1, 2)], axis=1)
         elif self.act_count == 1:
-            raw_rep = self.trading_records[self.trading_index-3:self.trading_index+1, :]
             extra_rep = np.concatenate(
                 [
                     np.array([1, 0, 1, 0, 1, 0])*self.env_config.initial_cash_value,
@@ -26,9 +25,7 @@ class BitcoinTradeEnv():
                 ],
                 axis=0
             )
-            obs = np.concatenate([raw_rep, extra_rep.reshape(-1, 2)], axis=1)
         elif self.act_count == 2:
-            raw_rep = self.trading_records[self.trading_index-3:self.trading_index+1, :]
             extra_rep = np.concatenate(
                 [
                     np.array([1, 0, 1, 0])*self.current_cash_value,
@@ -37,9 +34,7 @@ class BitcoinTradeEnv():
                 ],
                 axis=0
             )
-            obs = np.concatenate([raw_rep, extra_rep.reshape(-1, 2)], axis=1)
         elif self.act_count == 3:
-            raw_rep = self.trading_records[self.trading_index-3:self.trading_index+1, :]
             extra_rep = np.concatenate(
                 [
                     np.array([1, 0])*self.current_cash_value,
@@ -49,9 +44,7 @@ class BitcoinTradeEnv():
                 ],
                 axis=0
             )
-            obs = np.concatenate([raw_rep, extra_rep.reshape(-1, 2)], axis=1)
         else:
-            raw_rep = self.trading_records[self.trading_index-3:self.trading_index+1, :]
             extra_rep = np.concatenate(
                 [
                     np.array([self.asset_cash_history[-4][0], self.asset_cash_history[-4][1]*raw_rep[-4, -3]]),
@@ -61,7 +54,8 @@ class BitcoinTradeEnv():
                 ],
                 axis=0
             )
-            obs = np.concatenate([raw_rep, extra_rep.reshape(-1, 2)], axis=1)
+
+        obs = np.concatenate([raw_rep, extra_rep.reshape(-1, 2)], axis=1)
 
         return obs
 
@@ -76,7 +70,7 @@ class BitcoinTradeEnv():
         self.current_asset_unit = 0
         self.asset_cash_history = [[self.current_cash_value, self.current_asset_unit]]
         self.total_capital_history = [self.current_cash_value]
-        self.trading_index = np.random.randint(3, self.trading_records.shape[0] - self.env_config.episode_length)
+        self.trading_index = np.random.randint(20+3, self.trading_records.shape[0] - self.env_config.episode_length)
         self.obs = self._prep_obs()
 
         return self.obs
