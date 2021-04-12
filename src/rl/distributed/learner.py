@@ -11,6 +11,7 @@ import random
 
 from ..utils import rescale, inv_rescale
 
+@ray.remote(num_gpus=1, num_cpus=1)
 class LearnerR2D2(object):
     def __init__(self,
                  eval_env,

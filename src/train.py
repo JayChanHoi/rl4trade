@@ -104,7 +104,7 @@ def distributed_train(train_config):
     for actor in actors:
         actor.run.remote()
 
-    learner.run()
+    learner.run.remote()
 
 if __name__ == '__main__':
     train_config_dict = yaml.load(open(os.path.join(os.getcwd(), 'src/config/train_config.yml'), "r"))
