@@ -57,6 +57,9 @@ class LearnerR2D2(object):
         self.hidden_state_dim = hidden_state_dim
         self.sequence_length = sequence_length
 
+        if torch.cuda.device_count() > 1:
+            self.agent_core_net = torch.nn.DataParallel(self.agent_core_net)
+
     def write_log(self, writer, value, tag, global_step):
         writer.add_scalar(tag=tag, scalar_value=value, global_step=global_step)
 
