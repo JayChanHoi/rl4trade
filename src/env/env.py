@@ -17,12 +17,12 @@ class BitcoinTradeEnv():
         raw_rep_list = [(self.trading_records[trading_index-9:trading_index+1, :] / norm_vec).reshape(-1) for trading_index in range(self.trading_index-3, self.trading_index+1)]
         raw_rep = np.vstack(raw_rep_list)
         if self.act_count == 0:
-            extra_rep = np.array([1, 0, 1, 0, 1, 0, 1, 0])*self.env_config.initial_cash_value
+            extra_rep = np.array([1, 0, 1, 0, 1, 0, 1, 0])
         elif self.act_count == 1:
             extra_rep = np.concatenate(
                 [
-                    np.array([1, 0, 1, 0, 1, 0])*self.env_config.initial_cash_value,
-                    np.array([self.current_cash_value, self.current_asset_unit*raw_rep[-1, -3]])
+                    np.array([1, 0, 1, 0, 1, 0]),
+                    np.array([self.current_cash_value/self.env_config.initial_cash_value, (self.current_asset_unit/self.env_config.initial_cash_value)*raw_rep[-1, -3]])
                 ],
                 axis=0
             )
@@ -30,8 +30,8 @@ class BitcoinTradeEnv():
             extra_rep = np.concatenate(
                 [
                     np.array([1, 0, 1, 0])*self.current_cash_value,
-                    np.array([self.asset_cash_history[-2][0], self.asset_cash_history[-2][1]*raw_rep[-2, -3]]),
-                    np.array([self.asset_cash_history[-1][0], self.asset_cash_history[-1][1]*raw_rep[-1, -3]])
+                    np.array([self.asset_cash_history[-2][0]/self.env_config.initial_cash_value, self.asset_cash_history[-2][1]*raw_rep[-2, -3]/self.env_config.initial_cash_value]),
+                    np.array([self.asset_cash_history[-1][0]/self.env_config.initial_cash_value, self.asset_cash_history[-1][1]*raw_rep[-1, -3]/self.env_config.initial_cash_value])
                 ],
                 axis=0
             )
@@ -39,19 +39,19 @@ class BitcoinTradeEnv():
             extra_rep = np.concatenate(
                 [
                     np.array([1, 0])*self.current_cash_value,
-                    np.array([self.asset_cash_history[-3][0], self.asset_cash_history[-3][1]*raw_rep[-3, -3]]),
-                    np.array([self.asset_cash_history[-2][0], self.asset_cash_history[-2][1]*raw_rep[-2, -3]]),
-                    np.array([self.asset_cash_history[-1][0], self.asset_cash_history[-1][1]*raw_rep[-1, -3]])
+                    np.array([self.asset_cash_history[-3][0]/self.env_config.initial_cash_value, self.asset_cash_history[-3][1]*raw_rep[-3, -3]/self.env_config.initial_cash_value]),
+                    np.array([self.asset_cash_history[-2][0]/self.env_config.initial_cash_value, self.asset_cash_history[-2][1]*raw_rep[-2, -3]/self.env_config.initial_cash_value]),
+                    np.array([self.asset_cash_history[-1][0]/self.env_config.initial_cash_value, self.asset_cash_history[-1][1]*raw_rep[-1, -3]/self.env_config.initial_cash_value])
                 ],
                 axis=0
             )
         else:
             extra_rep = np.concatenate(
                 [
-                    np.array([self.asset_cash_history[-4][0], self.asset_cash_history[-4][1]*raw_rep[-4, -3]]),
-                    np.array([self.asset_cash_history[-3][0], self.asset_cash_history[-3][1]*raw_rep[-3, -3]]),
-                    np.array([self.asset_cash_history[-2][0], self.asset_cash_history[-2][1]*raw_rep[-2, -3]]),
-                    np.array([self.asset_cash_history[-1][0], self.asset_cash_history[-1][1]*raw_rep[-1, -3]])
+                    np.array([self.asset_cash_history[-4][0]/self.env_config.initial_cash_value, self.asset_cash_history[-4][1]*raw_rep[-4, -3]/self.env_config.initial_cash_value]),
+                    np.array([self.asset_cash_history[-3][0]/self.env_config.initial_cash_value, self.asset_cash_history[-3][1]*raw_rep[-3, -3]/self.env_config.initial_cash_value]),
+                    np.array([self.asset_cash_history[-2][0]/self.env_config.initial_cash_value, self.asset_cash_history[-2][1]*raw_rep[-2, -3]/self.env_config.initial_cash_value]),
+                    np.array([self.asset_cash_history[-1][0]/self.env_config.initial_cash_value, self.asset_cash_history[-1][1]*raw_rep[-1, -3]/self.env_config.initial_cash_value])
                 ],
                 axis=0
             )
