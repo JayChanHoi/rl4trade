@@ -54,7 +54,7 @@ class LSTMQNet(nn.Module):
         b = x.shape[0]
         l = x.shape[1]
 
-        x_reshape = x.reshape(-1, 8)
+        x_reshape = x.reshape(-1, 62)
         encoded_state = self.state_encoder(x_reshape).reshape(b, l, -1)
 
         self.temporal_encoder.flatten_parameters()
