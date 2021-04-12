@@ -57,9 +57,6 @@ class LearnerR2D2(object):
         self.hidden_state_dim = hidden_state_dim
         self.sequence_length = sequence_length
 
-        if torch.cuda.device_count() > 1:
-            self.agent_core_net = torch.nn.DataParallel(self.agent_core_net)
-
     def write_log(self, writer, value, tag, global_step):
         writer.add_scalar(tag=tag, scalar_value=value, global_step=global_step)
 
@@ -171,24 +168,14 @@ class LearnerR2D2(object):
 
                 self.agent_core_net.train()
                 if self.train_count % 5000 == 0 and self.train_count > 0:
-                    if torch.cuda.device_count() > 1:
-                        checkpoint_dict = {'iter': iter + 1, 'state_dict': self.agent_core_net.module.state_dict()}
-                        torch.save(
-                            checkpoint_dict,
-                            os.path.join(
-                                'checkpoint/{}'.format(self.model_name),
-                                '{}_checkpoint_episode_{}.pth'.format('distributed_dqn', self.train_count + 1)
-                            )
+                    checkpoint_dict = {'iter': iter + 1, 'state_dict': self.agent_core_net.state_dict()}
+                    torch.save(
+                        checkpoint_dict,
+                        os.path.join(
+                            'checkpoint/{}'.format(self.model_name),
+                            '{}_checkpoint_episode_{}.pth'.format('distributed_dqn', self.train_count + 1)
                         )
-                    else:
-                        checkpoint_dict = {'iter': iter + 1, 'state_dict': self.agent_core_net.state_dict()}
-                        torch.save(
-                            checkpoint_dict,
-                            os.path.join(
-                                'checkpoint/{}'.format(self.model_name),
-                                '{}_checkpoint_episode_{}.pth'.format('distributed_dqn', self.train_count + 1)
-                            )
-                        )
+                    )
 
                 self.train_count += 1
 
