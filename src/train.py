@@ -101,10 +101,12 @@ def distributed_train(train_config):
                                  nstep=train_config.nstep,
                                  hidden_state_dim=train_config.hidden_state_dim,
                                  sequence_length=train_config.sequence_length)
-    workers.append(learner)
 
     for worker in workers:
         worker.run.remote()
+
+    for _ in count():
+        learner.run.remote()
 
 if __name__ == '__main__':
     train_config_dict = yaml.load(open(os.path.join(os.getcwd(), 'src/config/train_config.yml'), "r"))
