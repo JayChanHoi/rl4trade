@@ -165,7 +165,7 @@ class LearnerR2D2(object):
 
             self.agent_core_net.train()
             if self.train_count % 5000 == 0 and self.train_count > 0:
-                checkpoint_dict = {'iter': iter + 1, 'state_dict': self.agent_core_net.state_dict()}
+                checkpoint_dict = {'train_iter': self.train_count, 'state_dict': self.agent_core_net.state_dict()}
                 torch.save(
                     checkpoint_dict,
                     os.path.join(
