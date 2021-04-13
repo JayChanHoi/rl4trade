@@ -91,6 +91,10 @@ class LearnerR2D2(object):
 
     def run(self):
         memory_size = self.memory_server.memory_size.remote()
+        learner_expected_reward = 0
+        learner_episodic_investment_return = 0
+        random_agent_expected_reward = 0
+        random_agent_episodic_investment_return = 0
         if ray.get(memory_size) >= self.learner_start_update_memory_size:
             batch_memory, sample_indices, priority_prob = ray.get(self.memory_server.send_sample_to_learner.remote(
                 alpha=self.priority_alpha,
