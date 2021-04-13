@@ -17,6 +17,7 @@ import os
 from collections import namedtuple
 import yaml
 import shutil
+from itertools import count
 
 def distributed_train(train_config):
     if torch.cuda.is_available():
@@ -80,31 +81,32 @@ def distributed_train(train_config):
     if torch.cuda.is_available():
         agent_core_net.cuda()
 
-    # learner = LearnerR2D2.remote(eval_env=eval_env,
-    #                              eval_frequency=train_config.eval_frequency,
-    #                              memory_server=memory_server,
-    #                              parameter_server=parameter_server,
-    #                              writer=writer,
-    #                              device=device,
-    #                              batch_size=train_config.batch_size,
-    #                              agent_core_net=agent_core_net,
-    #                              memory_size_bound=train_config.memory_size_bound,
-    #                              optimizer=optimizer,
-    #                              gamma=train_config.gamma,
-    #                              update_lambda=train_config.update_lambda,
-    #                              target_net_update_frequency=train_config.target_net_update_frequency,
-    #                              learner_start_update_memory_size=train_config.learner_start_update_memory_size,
-    #                              model_name=train_config.model_name,
-    #                              priority_alpha=train_config.priority_alpha,
-    #                              priority_beta=train_config.priority_beta,
-    #                              nstep=train_config.nstep,
-    #                              hidden_state_dim=train_config.hidden_state_dim,
-    #                              sequence_length=train_config.sequence_length)
+    learner = LearnerR2D2.remote(eval_env=eval_env,
+                                 eval_frequency=train_config.eval_frequency,
+                                 memory_server=memory_server,
+                                 parameter_server=parameter_server,
+                                 writer=writer,
+                                 device=device,
+                                 batch_size=train_config.batch_size,
+                                 agent_core_net=agent_core_net,
+                                 memory_size_bound=train_config.memory_size_bound,
+                                 optimizer=optimizer,
+                                 gamma=train_config.gamma,
+                                 update_lambda=train_config.update_lambda,
+                                 target_net_update_frequency=train_config.target_net_update_frequency,
+                                 learner_start_update_memory_size=train_config.learner_start_update_memory_size,
+                                 model_name=train_config.model_name,
+                                 priority_alpha=train_config.priority_alpha,
+                                 priority_beta=train_config.priority_beta,
+                                 nstep=train_config.nstep,
+                                 hidden_state_dim=train_config.hidden_state_dim,
+                                 sequence_length=train_config.sequence_length)
 
     for actor in actors:
         actor.run.remote()
 
-    # learner.run.remote()
+    for _ in count():
+        learner.run.remote()
 
 if __name__ == '__main__':
     train_config_dict = yaml.load(open(os.path.join(os.getcwd(), 'src/config/train_config.yml'), "r"))
