@@ -82,7 +82,6 @@ def distributed_train(train_config):
                                  eval_frequency=train_config.eval_frequency,
                                  memory_server=memory_server,
                                  parameter_server=parameter_server,
-                                 # writer=writer,
                                  device=device,
                                  batch_size=train_config.batch_size,
                                  agent_core_net=agent_core_net,

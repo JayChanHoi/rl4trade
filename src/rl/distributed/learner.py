@@ -18,7 +18,6 @@ class LearnerR2D2(object):
                  eval_frequency,
                  memory_server,
                  parameter_server,
-                 # writer,
                  device,
                  batch_size,
                  agent_core_net,
@@ -51,7 +50,6 @@ class LearnerR2D2(object):
         self.nsteps = nstep
         self.update_lambda = update_lambda
         self.optimizer = optimizer
-        # self.writer = writer
         self.model_name = model_name
         self.eval_frequency = eval_frequency
         self.eval_env = eval_env
