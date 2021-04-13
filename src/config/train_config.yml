@@ -1,8 +1,8 @@
 # R2D2 setting
-hidden_state_dim: 64
+hidden_state_dim: 512
 sequence_length: 40
 
-batch_size: 512
+batch_size: 64
 lr: 0.0000625
 agc_clipping: 0.04
 gamma: 0.99
