@@ -80,8 +80,8 @@ class ActorR2D2():
             action_value, hidden_state_output = self.actor_net(state, hidden_state)
 
         if random.random() < self.epsilon:
-            # action = torch.from_numpy(self.env.get_action_mask()).float().multinomial(1).item()
-            action = random.randint(0,2)
+            action = torch.from_numpy(self.env.get_action_mask()).float().multinomial(1).item()
+            # action = random.randint(0,2)
         else:
             action = action_value.argmax(dim=2).squeeze().item()
 
@@ -127,10 +127,16 @@ class ActorR2D2():
 
         for _ in count():
             with torch.no_grad():
-                self.local_memory.obs.append(torch.from_numpy(obs).float())
+                state = torch.cat(
+                    [
+                        torch.from_numpy(obs).float(),
+                        torch.from_numpy(self.env.get_action_mask()).float().reshape(1, -1).repeat(obs.shape[0], 1)
+                    ]
+                )
+                self.local_memory.obs.append(state)
 
                 # sample action
-                action, hidden_state = self.epsilon_greedy_policy(torch.from_numpy(obs).float().unsqueeze(0).unsqueeze(0), hidden_state)
+                action, hidden_state = self.epsilon_greedy_policy(state.unsqueeze(0).unsqueeze(0), hidden_state)
                 self.local_memory.actions.append(action)
                 self.local_memory.hidden_state_buffer.append(hidden_state)
 

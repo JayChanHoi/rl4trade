@@ -71,13 +71,20 @@ class LearnerR2D2(object):
             hidden_state = (torch.zeros(1, 1, self.hidden_state_dim, device=self.device), torch.zeros(1, 1, self.hidden_state_dim, device=self.device))
 
         for iter in count():
+            state = torch.cat(
+                [
+                    torch.from_numpy(obs).float(),
+                    torch.from_numpy(self.eval_env.get_action_mask()).float().reshape(1, -1).repeat(obs.shape[0], 1)
+                ]
+            )
+
             if qnet is not None:
-                action_value, hidden_state = qnet(torch.from_numpy(obs).float().unsqueeze(0).unsqueeze(0).cuda(), hidden_state)
+                action_value, hidden_state = qnet(state.unsqueeze(0).unsqueeze(0).cuda(), hidden_state)
                 action = action_value.argmax(dim=2).squeeze().item()
             else:
                 # sample action
-                # action = torch.from_numpy(self.eval_env.get_action_mask()).float().multinomial(1).item()
-                action = random.randint(0,2)
+                action = torch.from_numpy(self.eval_env.get_action_mask()).float().multinomial(1).item()
+                # action = random.randint(0,2)
 
             obs, reward, done, _ = self.eval_env.step(action)
             reward_list.append(reward)
