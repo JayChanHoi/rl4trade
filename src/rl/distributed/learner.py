@@ -73,7 +73,7 @@ class LearnerR2D2(object):
         for iter in count():
             if qnet is not None:
                 action_value, hidden_state = qnet(torch.from_numpy(obs).float().unsqueeze(0).unsqueeze(0).cuda(), hidden_state)
-                action_value += torch.from_numpy(self.env.get_action_mask()).float().reshape(1, 1, -1).cuda() * -1e33
+                action_value += torch.from_numpy(self.eval_env.get_action_mask()).float().reshape(1, 1, -1).cuda() * -1e33
                 action = action_value.argmax(dim=2).squeeze().item()
             else:
                 # sample action
@@ -146,7 +146,7 @@ class LearnerR2D2(object):
                 self.memory_server.trim_excessive_sample.remote()
 
             self.optimizer.zero_grad()
-            loss = (normalized_is_weight * (td_error**2).mean(dim=1)).mean()
+            loss = (normalized_is_weight * (td_error**2).sum(dim=1)).mean()
             l = loss.item()
             loss.backward()
             self.optimizer.step()
