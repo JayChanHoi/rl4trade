@@ -145,7 +145,7 @@ class LearnerR2D2(object):
                 self.memory_server.trim_excessive_sample.remote()
 
             self.optimizer.zero_grad()
-            loss = (normalized_is_weight * (td_error**2).sum(dim=1)).mean()
+            loss = (normalized_is_weight * (td_error**2).mean(dim=1)).mean()
             l = loss.item()
             loss.backward()
             self.optimizer.step()
