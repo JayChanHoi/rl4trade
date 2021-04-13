@@ -1,5 +1,5 @@
 # R2D2 setting
-hidden_state_dim: 512
+hidden_state_dim: 64
 sequence_length: 40
 
 batch_size: 512

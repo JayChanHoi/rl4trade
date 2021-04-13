@@ -144,11 +144,11 @@ class LearnerR2D2(object):
                 self.memory_server.update_priority.remote(priority, sample_indices)
                 self.memory_server.trim_excessive_sample.remote()
 
-            loss = (normalized_is_weight * (td_error**2).mean(dim=1)).mean()
             self.optimizer.zero_grad()
+            loss = (normalized_is_weight * (td_error**2).sum(dim=1)).mean()
+            l = loss.item()
             loss.backward()
             self.optimizer.step()
-            l = loss.item()
 
             if self.train_count > 0 and self.train_count % 10:
                 self.parameter_server.update_ps_state_dict.remote({k:v.cpu() for k, v in self.agent_core_net.state_dict().items()})
