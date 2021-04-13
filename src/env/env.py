@@ -91,16 +91,14 @@ class BitcoinTradeEnv():
             if self.current_cash_value >= self.trading_open_price[self.trading_index+1]:
                 self.current_asset_unit += self.env_config.position_amount
                 self.current_cash_value -= self.trading_open_price[self.trading_index+1] * self.env_config.position_amount - self.env_config.trade_cost
-                if self.current_cash_value + self.current_asset_unit*self.trading_open_price[self.trading_index+1] >= self.total_capital_history[0]:
-                    reward += (self.current_cash_value + self.current_asset_unit*self.trading_open_price[self.trading_index+1] - self.total_capital_history[0]) / 10000
+                reward += (self.current_cash_value + self.current_asset_unit*self.trading_open_price[self.trading_index+1] - self.total_capital_history[0]) / 10000
             else:
                 reward = -1
         elif action == 2:
             if self.current_asset_unit >= self.env_config.position_amount:
                 self.current_cash_value += self.trading_open_price[self.trading_index+1] * self.env_config.position_amount - self.env_config.trade_cost
                 self.current_asset_unit -= self.env_config.position_amount
-                if self.current_cash_value + self.current_asset_unit*self.trading_open_price[self.trading_index+1] >= self.total_capital_history[0]:
-                    reward += (self.current_cash_value + self.current_asset_unit*self.trading_open_price[self.trading_index+1] - self.total_capital_history[0]) / 10000
+                reward += (self.current_cash_value + self.current_asset_unit*self.trading_open_price[self.trading_index+1] - self.total_capital_history[0]) / 10000
             else:
                 reward = -1
         else:
