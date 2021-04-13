@@ -93,6 +93,7 @@ class LearnerR2D2(object):
         learner_episodic_investment_return = None
         random_agent_expected_reward = None
         random_agent_episodic_investment_return = None
+        l = None
         if ray.get(memory_size) >= self.learner_start_update_memory_size:
             batch_memory, sample_indices, priority_prob = ray.get(self.memory_server.send_sample_to_learner.remote(
                 alpha=self.priority_alpha,
@@ -147,6 +148,7 @@ class LearnerR2D2(object):
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
+            l = loss.item()
 
             if self.train_count > 0 and self.train_count % 10:
                 self.parameter_server.update_ps_state_dict.remote({k:v.cpu() for k, v in self.agent_core_net.state_dict().items()})
@@ -173,6 +175,4 @@ class LearnerR2D2(object):
 
             self.train_count += 1
 
-            return ray.get(memory_size), loss.item(), learner_expected_reward, learner_episodic_investment_return, random_agent_expected_reward, random_agent_episodic_investment_return, self.train_count
-        else:
-            return ray.get(memory_size), None, None, None, None, None, None
+        return ray.get(memory_size), l, learner_expected_reward, learner_episodic_investment_return, random_agent_expected_reward, random_agent_episodic_investment_return, self.train_count
