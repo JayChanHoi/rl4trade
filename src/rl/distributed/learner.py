@@ -55,10 +55,10 @@ class LearnerR2D2(object):
         self.eval_env = eval_env
         self.hidden_state_dim = hidden_state_dim
         self.sequence_length = sequence_length
-
         if torch.cuda.is_available():
-            agent_core_net.cuda()
-
+            self.agent_core_net.cuda()
+            self.target_net.cuda()
+            
         self.agent_core_net.train()
         self.target_net.eval()
 
