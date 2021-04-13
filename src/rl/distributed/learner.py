@@ -73,7 +73,7 @@ class LearnerR2D2(object):
         for iter in count():
             if qnet is not None:
                 action_value, hidden_state = qnet(torch.from_numpy(obs).float().unsqueeze(0).unsqueeze(0).cuda(), hidden_state)
-                action = (action_value * torch.from_numpy(self.eval_env.get_action_mask()).float().reshape(1, 1, -1)).argmax(dim=2).squeeze().item()
+                action = (action_value * torch.from_numpy(self.eval_env.get_action_mask()).float().reshape(1, 1, -1).cuda()).argmax(dim=2).squeeze().item()
             else:
                 # sample action
                 action = torch.from_numpy(self.eval_env.get_action_mask()).float().multinomial(1).item()
