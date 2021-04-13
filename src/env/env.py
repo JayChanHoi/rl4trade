@@ -148,7 +148,7 @@ if __name__ == '__main__':
     for _ in count():
         action = np.random.randint(0, 3)
         state, reward, done, _ = bitcon_trade_env.step(action)
-        print(bitcon_trade_env.get_action_mask())
+        print((1- bitcon_trade_env.get_action_mask()))
         rewards.append(reward)
         print(action)
         print(state)
