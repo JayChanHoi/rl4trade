@@ -4,16 +4,13 @@ class StateEncoder(nn.Module):
     def __init__(self, dropout_p):
         super(StateEncoder, self).__init__()
         self.encoder_net = nn.Sequential(
-            nn.Linear(62, 32),
+            nn.Linear(62, 48),
             nn.ReLU(),
             nn.Dropout(dropout_p),
-            nn.Linear(32, 32),
+            nn.Linear(48, 32),
             nn.ReLU(),
             nn.Dropout(dropout_p),
-            nn.Linear(32, 32),
-            nn.ReLU(),
-            nn.Dropout(dropout_p),
-            nn.Linear(32, 32),
+            nn.Linear(32, 16),
             nn.ReLU()
         )
 
@@ -27,7 +24,7 @@ class LSTMQNet(nn.Module):
         super(LSTMQNet, self).__init__()
         self.state_encoder = StateEncoder(dropout_p)
         self.temporal_encoder = nn.LSTM(
-            input_size=32*hist_length,
+            input_size=16*hist_length,
             hidden_size=512,
             batch_first=True
         )
