@@ -61,9 +61,6 @@ class LearnerR2D2(object):
         self.agent_core_net.train()
         self.target_net.eval()
 
-    def write_log(self, writer, value, tag, global_step):
-        writer.add_scalar(tag=tag, scalar_value=value, global_step=global_step)
-
     def eval(self, qnet):
         obs = self.eval_env.reset()
 
@@ -146,8 +143,6 @@ class LearnerR2D2(object):
             loss.backward()
             self.optimizer.step()
 
-            # self.write_log(self.writer, loss.item(), 'Loss', self.train_count)
-
             if self.train_count > 0 and self.train_count % 10:
                 self.parameter_server.update_ps_state_dict.remote({k:v.cpu() for k, v in self.agent_core_net.state_dict().items()})
 
@@ -157,14 +152,8 @@ class LearnerR2D2(object):
             if self.train_count % self.eval_frequency == 0 and self.train_count > 0:
                 with torch.no_grad():
                     self.agent_core_net.eval()
-                    expected_reward, episodic_investment_return = self.eval(self.agent_core_net)
-                    # self.writer.add_scalars(main_tag='expected reward', tag_scalar_dict={'learner':expected_reward}, global_step=self.train_count)
-                    # self.writer.add_scalars(main_tag='episodic investment return ', tag_scalar_dict={'learner':episodic_investment_return}, global_step=self.train_count)
-                    # self.writer.add_scalars(main_tag='memory size', tag_scalar_dict={'learner':ray.get(memory_size)}, global_step=iter)
-
-                    expected_reward, episodic_investment_return = self.eval(None)
-                    # self.writer.add_scalars(main_tag='expected reward', tag_scalar_dict={'random agent':expected_reward}, global_step=self.train_count)
-                    # self.writer.add_scalars(main_tag='episodic investment return ', tag_scalar_dict={'random agent':episodic_investment_return}, global_step=self.train_count)
+                    learner_expected_reward, learner_episodic_investment_return = self.eval(self.agent_core_net)
+                    random_agent_expected_reward, random_agent_episodic_investment_return = self.eval(None)
 
             self.agent_core_net.train()
             if self.train_count % 5000 == 0 and self.train_count > 0:
@@ -181,7 +170,4 @@ class LearnerR2D2(object):
             print('===============================train count : {}================================'.format(self.train_count))
             print(loss.item())
 
-        else:
-            if iter % 10000 == 0:
-                pass
-                # self.writer.add_scalars(main_tag='memory size', tag_scalar_dict={'learner':ray.get(memory_size)}, global_step=iter)
+        return memory_size, loss.item(), learner_expected_reward, learner_episodic_investment_return, random_agent_expected_reward, random_agent_episodic_investment_return, self.train_count
