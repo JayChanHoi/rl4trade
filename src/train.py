@@ -107,14 +107,13 @@ def distributed_train(train_config):
 
     for iter in count():
         memory_size, loss, learner_expected_reward, learner_episodic_investment_return, random_agent_expected_reward, random_agent_episodic_investment_return, train_count = ray.get(learner.run.remote())
-
-        writer.add_scalars(main_tag='expected reward', tag_scalar_dict={'learner':learner_expected_reward}, global_step=train_count)
-        writer.add_scalars(main_tag='episodic investment return ', tag_scalar_dict={'learner':learner_episodic_investment_return}, global_step=train_count)
-        writer.add_scalars(main_tag='memory size', tag_scalar_dict={'learner':memory_size}, global_step=iter)
-        writer.add_scalars(main_tag='expected reward', tag_scalar_dict={'random agent':random_agent_expected_reward}, global_step=train_count)
-        writer.add_scalars(main_tag='episodic investment return ', tag_scalar_dict={'random agent':random_agent_episodic_investment_return}, global_step=train_count)
-        writer.add_scalar(tag='loss', scalar_value=loss, global_step=train_count)
         if memory_size >= train_config.learner_start_update_memory_size:
+            writer.add_scalars(main_tag='expected reward', tag_scalar_dict={'learner':learner_expected_reward}, global_step=train_count)
+            writer.add_scalars(main_tag='episodic investment return ', tag_scalar_dict={'learner':learner_episodic_investment_return}, global_step=train_count)
+            writer.add_scalars(main_tag='memory size', tag_scalar_dict={'learner':memory_size}, global_step=iter)
+            writer.add_scalars(main_tag='expected reward', tag_scalar_dict={'random agent':random_agent_expected_reward}, global_step=train_count)
+            writer.add_scalars(main_tag='episodic investment return ', tag_scalar_dict={'random agent':random_agent_episodic_investment_return}, global_step=train_count)
+            writer.add_scalar(tag='loss', scalar_value=loss, global_step=train_count)
             writer.add_scalar(tag='memory_size', scalar_value=memory_size, global_step=train_count)
 
 if __name__ == '__main__':

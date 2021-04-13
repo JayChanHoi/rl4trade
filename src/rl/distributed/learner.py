@@ -170,4 +170,6 @@ class LearnerR2D2(object):
             print('===============================train count : {}================================'.format(self.train_count))
             print(loss.item())
 
-        return memory_size, loss.item(), learner_expected_reward, learner_episodic_investment_return, random_agent_expected_reward, random_agent_episodic_investment_return, self.train_count
+            return memory_size, loss.item(), learner_expected_reward, learner_episodic_investment_return, random_agent_expected_reward, random_agent_episodic_investment_return, self.train_count
+        else:
+            return memory_size, None, None, None, None, None, None
