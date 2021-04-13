@@ -131,7 +131,8 @@ class ActorR2D2():
                     [
                         torch.from_numpy(obs).float(),
                         torch.from_numpy(self.env.get_action_mask()).float().reshape(1, -1).repeat(obs.shape[0], 1)
-                    ]
+                    ],
+                    dim=1
                 )
                 self.local_memory.obs.append(state)
 

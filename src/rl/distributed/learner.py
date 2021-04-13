@@ -75,7 +75,8 @@ class LearnerR2D2(object):
                 [
                     torch.from_numpy(obs).float(),
                     torch.from_numpy(self.eval_env.get_action_mask()).float().reshape(1, -1).repeat(obs.shape[0], 1)
-                ]
+                ],
+                dim=1
             )
 
             if qnet is not None:
