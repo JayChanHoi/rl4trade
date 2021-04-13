@@ -112,6 +112,9 @@ def distributed_train(train_config):
             writer.add_scalar(tag='loss', scalar_value=loss, global_step=train_count)
             writer.add_scalar(tag='memory_size', scalar_value=memory_size, global_step=train_count)
 
+            print('===============================train count : {}================================'.format(train_count))
+            print(loss)
+
 if __name__ == '__main__':
     train_config_dict = yaml.load(open(os.path.join(os.getcwd(), 'src/config/train_config.yml'), "r"))
     train_config = namedtuple('train_config', train_config_dict.keys())(**train_config_dict)

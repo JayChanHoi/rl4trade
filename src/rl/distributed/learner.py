@@ -172,8 +172,6 @@ class LearnerR2D2(object):
                 )
 
             self.train_count += 1
-            print('===============================train count : {}================================'.format(self.train_count))
-            print(loss.item())
 
             return ray.get(memory_size), loss.item(), learner_expected_reward, learner_episodic_investment_return, random_agent_expected_reward, random_agent_episodic_investment_return, self.train_count
         else:
