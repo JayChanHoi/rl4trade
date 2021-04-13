@@ -57,7 +57,7 @@ def distributed_train(train_config):
     parameter_server = ParameterServer.remote({k: v.cpu() for k, v in agent_core_net.state_dict().items()})
     memory_server = MemoryServer.remote(train_config.memory_size_bound)
 
-    actors = []
+    workers = []
     for i in range(train_config.actor_total_num):
         actor = ActorR2D2.remote(agent_core_net=agent_core_net,
                                  memory_server=memory_server,
@@ -76,7 +76,7 @@ def distributed_train(train_config):
                                  trade_data_path=data_path,
                                  sequence_length=train_config.sequence_length,
                                  hidden_state_dim=train_config.hidden_state_dim)
-        actors.append(actor)
+        workers.append(actor)
 
     if torch.cuda.is_available():
         agent_core_net.cuda()
@@ -101,12 +101,10 @@ def distributed_train(train_config):
                                  nstep=train_config.nstep,
                                  hidden_state_dim=train_config.hidden_state_dim,
                                  sequence_length=train_config.sequence_length)
+    workers.append(learner)
 
-    for actor in actors:
-        actor.run.remote()
-
-    for _ in count():
-        learner.run.remote()
+    for worker in workers:
+        worker.run.remote()
 
 if __name__ == '__main__':
     train_config_dict = yaml.load(open(os.path.join(os.getcwd(), 'src/config/train_config.yml'), "r"))
