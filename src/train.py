@@ -78,9 +78,6 @@ def distributed_train(train_config):
                                  hidden_state_dim=train_config.hidden_state_dim)
         workers.append(actor)
 
-    if torch.cuda.is_available():
-        agent_core_net.cuda()
-
     learner = LearnerR2D2.remote(eval_env=eval_env,
                                  eval_frequency=train_config.eval_frequency,
                                  memory_server=memory_server,
