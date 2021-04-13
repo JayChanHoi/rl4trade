@@ -76,7 +76,8 @@ class LearnerR2D2(object):
                 action = action_value.argmax(dim=2).squeeze().item()
             else:
                 # sample action
-                action = torch.from_numpy(self.eval_env.get_action_mask()).float().multinomial(1).item()
+                # action = torch.from_numpy(self.eval_env.get_action_mask()).float().multinomial(1).item()
+                action = random.randint(0,2)
 
             obs, reward, done, _ = self.eval_env.step(action)
             reward_list.append(reward)
