@@ -69,7 +69,7 @@ class GlobalMemoryR2D2(object):
         for i, index in enumerate(sample_indices):
             self.priority[index] = priority[i].view(1)
 
-@ray.remote(num_cpus=1)
+@ray.remote(num_cpus=2)
 class MemoryServer(object):
     def __init__(self, memory_size_bound):
         self.global_memory = GlobalMemoryR2D2(memory_size_bound)

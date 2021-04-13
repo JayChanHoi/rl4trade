@@ -58,7 +58,7 @@ class LearnerR2D2(object):
         if torch.cuda.is_available():
             self.agent_core_net.cuda()
             self.target_net.cuda()
-            
+
         self.agent_core_net.train()
         self.target_net.eval()
 
