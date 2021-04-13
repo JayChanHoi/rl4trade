@@ -82,7 +82,7 @@ class ActorR2D2():
         if random.random() < self.epsilon:
             action = torch.from_numpy(self.env.get_action_mask()).float().multinomial(1).item()
         else:
-            action_value += torch.from_numpy(self.env.get_action_mask()).float().reshape(1, 1, -1) * -1e33
+            action_value += (1 - torch.from_numpy(self.env.get_action_mask()).float().reshape(1, 1, -1)) * -1e33
             action = action_value.argmax(dim=2).squeeze().item()
 
         return action, hidden_state_output
