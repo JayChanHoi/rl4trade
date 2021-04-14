@@ -45,7 +45,8 @@ def distributed_train(train_config):
     write_config(writer, train_config, eval_env.env_config)
     agent_core_net = LSTMQNet(
         train_config.dropout_p,
-        hist_length=4
+        hist_length=4,
+        num_layer=train_config.num_layer
     )
 
     if train_config.resume != '':
@@ -75,7 +76,8 @@ def distributed_train(train_config):
                                  env_config=env_config,
                                  trade_data_path=data_path,
                                  sequence_length=train_config.sequence_length,
-                                 hidden_state_dim=train_config.hidden_state_dim)
+                                 hidden_state_dim=train_config.hidden_state_dim,
+                                 num_layer=train_config.num_layer)
         workers.append(actor)
 
     learner = LearnerR2D2.remote(eval_env=eval_env,
@@ -96,7 +98,8 @@ def distributed_train(train_config):
                                  priority_beta=train_config.priority_beta,
                                  nstep=train_config.nstep,
                                  hidden_state_dim=train_config.hidden_state_dim,
-                                 sequence_length=train_config.sequence_length)
+                                 sequence_length=train_config.sequence_length,
+                                 num_layer=train_config.num_layer)
 
     for worker in workers:
         worker.run.remote()

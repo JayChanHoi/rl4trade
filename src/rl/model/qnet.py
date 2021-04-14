@@ -32,14 +32,15 @@ class StateEncoder(nn.Module):
 class LSTMQNet(nn.Module):
     def __init__(self,
                  dropout_p,
-                 hist_length):
+                 hist_length,
+                 num_layer=1):
         super(LSTMQNet, self).__init__()
         self.state_encoder = StateEncoder(dropout_p)
         self.temporal_encoder = nn.LSTM(
             input_size=16*hist_length,
             hidden_size=512,
             batch_first=True,
-            num_layers=2
+            num_layers=num_layer
         )
 
         self.state_layer = nn.Sequential(

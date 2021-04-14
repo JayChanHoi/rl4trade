@@ -53,7 +53,8 @@ class ActorR2D2():
                  sequence_length,
                  hidden_state_dim,
                  env_config,
-                 trade_data_path):
+                 trade_data_path,
+                 num_layer):
         self.actor_net = deepcopy(agent_core_net).cpu()
         self.actor_net.load_state_dict({k: v.cpu() for k, v in agent_core_net.state_dict().items()})
         self.actor_net.eval()
@@ -69,6 +70,7 @@ class ActorR2D2():
         self.update_lambda = update_lambda
         self.sequence_length = sequence_length
         self.hidden_state_dim = hidden_state_dim
+        self.num_layer = num_layer
         self.epsilon = actor_epsilon ** (1 + (actor_id * actor_alpha) / (self.actor_total_num - 1))
         self.env = BitcoinTradeEnv(trade_data_path, env_config)
         self.local_memory = LocalMemoryR2D2()
@@ -121,7 +123,7 @@ class ActorR2D2():
 
     def run(self):
         obs = self.env.reset()
-        hidden_state = (torch.zeros(1, 1, self.hidden_state_dim), torch.zeros(1, 1, self.hidden_state_dim))
+        hidden_state = (torch.zeros(self.num_layer, 1, self.hidden_state_dim), torch.zeros(self.num_layer, 1, self.hidden_state_dim))
         self.local_memory.hidden_state_buffer.append(hidden_state)
         step_count = 0
 
@@ -151,7 +153,7 @@ class ActorR2D2():
                     self.episode_count += 1
                     step_count = 0
 
-                    hidden_state = (torch.zeros(1, 1, self.hidden_state_dim), torch.zeros(1, 1, self.hidden_state_dim))
+                    hidden_state = (torch.zeros(self.num_layer, 1, self.hidden_state_dim), torch.zeros(self.num_layer, 1, self.hidden_state_dim))
                     self.local_memory.hidden_state_buffer.append(hidden_state)
                     self.local_memory.reset(0)
 

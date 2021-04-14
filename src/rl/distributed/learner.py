@@ -29,6 +29,7 @@ class LearnerR2D2(object):
                  target_net_update_frequency,
                  learner_start_update_memory_size,
                  model_name,
+                 num_layer,
                  priority_alpha=0.6,
                  priority_beta=0.4,
                  hidden_state_dim=512,
@@ -54,6 +55,7 @@ class LearnerR2D2(object):
         self.eval_frequency = eval_frequency
         self.eval_env = eval_env
         self.hidden_state_dim = hidden_state_dim
+        self.num_layer = num_layer
         self.sequence_length = sequence_length
         if torch.cuda.is_available():
             self.agent_core_net.cuda()
@@ -68,7 +70,7 @@ class LearnerR2D2(object):
         reward_list = []
         episode_length = 0
         if qnet is not None:
-            hidden_state = (torch.zeros(1, 1, self.hidden_state_dim, device=self.device), torch.zeros(1, 1, self.hidden_state_dim, device=self.device))
+            hidden_state = (torch.zeros(self.num_layer, 1, self.hidden_state_dim, device=self.device), torch.zeros(self.num_layer, 1, self.hidden_state_dim, device=self.device))
 
         for iter in count():
             state = torch.cat(
