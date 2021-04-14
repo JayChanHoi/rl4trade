@@ -61,6 +61,7 @@ class LSTMQNet(nn.Module):
         state_value = self.state_layer(temporal_out.reshape(-1, temporal_out.shape[-1]))
         action_value = self.action_layer(temporal_out.reshape(-1, temporal_out.shape[-1]))
         q_value = (state_value + (action_value - action_value.mean(dim=1, keepdim=True)))
-        q_value = q_value.reshape(b, l, action_value.shape[-1]) + (1 - mask) * (-1e33)
+        # q_value = q_value.reshape(b, l, action_value.shape[-1]) + (1 - mask) * (-1e33)
+        q_value = q_value.reshape(b, l, action_value.shape[-1])
 
         return q_value, last_hidden_state
