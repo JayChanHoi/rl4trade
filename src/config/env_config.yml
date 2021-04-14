@@ -1,4 +1,4 @@
-episode_length: 1000
+episode_length: 10000
 initial_cash_value: 1000000
 position_amount: 1
 trade_cost: 5
