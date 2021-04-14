@@ -105,8 +105,9 @@ def distributed_train(train_config):
         worker.run.remote()
 
     for _ in count():
-        memory_size, loss, learner_expected_reward, learner_episodic_investment_return, random_agent_expected_reward, random_agent_episodic_investment_return, train_count = ray.get(learner.run.remote())
+        memory_size = ray.get(memory_server.memory_size.remote())
         if memory_size >= train_config.learner_start_update_memory_size:
+            loss, learner_expected_reward, learner_episodic_investment_return, random_agent_expected_reward, random_agent_episodic_investment_return, train_count = ray.get(learner.run.remote())
             if learner_expected_reward is not None:
                 writer.add_scalars(main_tag='expected reward', tag_scalar_dict={'learner':learner_expected_reward}, global_step=train_count)
             if learner_episodic_investment_return is not None:
