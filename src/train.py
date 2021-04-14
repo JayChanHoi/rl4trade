@@ -92,7 +92,6 @@ def distributed_train(train_config):
                                  gamma=train_config.gamma,
                                  update_lambda=train_config.update_lambda,
                                  target_net_update_frequency=train_config.target_net_update_frequency,
-                                 learner_start_update_memory_size=train_config.learner_start_update_memory_size,
                                  model_name=train_config.model_name,
                                  priority_alpha=train_config.priority_alpha,
                                  priority_beta=train_config.priority_beta,

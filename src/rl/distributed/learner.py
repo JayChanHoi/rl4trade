@@ -27,7 +27,6 @@ class LearnerR2D2(object):
                  nstep,
                  update_lambda,
                  target_net_update_frequency,
-                 learner_start_update_memory_size,
                  model_name,
                  num_layer,
                  priority_alpha=0.6,
@@ -46,7 +45,6 @@ class LearnerR2D2(object):
         self.priority_beta = priority_beta
         self.memory_size_bound = memory_size_bound
         self.target_net_update_frequency = target_net_update_frequency
-        self.learner_start_update_memory_size = learner_start_update_memory_size
         self.gamma = gamma
         self.nsteps = nstep
         self.update_lambda = update_lambda
