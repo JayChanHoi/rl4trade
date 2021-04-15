@@ -94,7 +94,7 @@ class LearnerR2D2(object):
             if done:
                 episode_reward = np.sum(reward_list) / (episode_length)
                 torch.cuda.empty_cache()
-                return [episode_reward, (self.eval_env.total_capital_history[-1] - self.eval_env.total_capital_history[0])/ 10000]
+                return [episode_reward, (self.eval_env.total_capital_history - self.eval_env.total_capital_history[0])/ 10000]
 
     def run(self):
         learner_expected_reward = None
