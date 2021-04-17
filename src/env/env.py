@@ -8,13 +8,22 @@ class BitcoinTradeEnv():
         self.trading_close_price = self.trading_records[:, -3]
         self.env_config = env_config
 
+    def _get_trade_rep(self, trading_index):
+        norm_constant = np.array([5e4, 5e4, 5e6]).reshape(1, -1)
+        open = self.trading_records[trading_index-19:trading_index+1, 0]
+        close = self.trading_records[trading_index-19:trading_index+1, 3]
+        volume = self.trading_records[trading_index-19:trading_index+1, -1]
+        trade_rep = np.concatenate([open, close, volume], axis=1)
+
+        return (trade_rep / norm_constant).reshape(-1)
+
     def _prep_obs(self):
         '''
         the obs is not yet normalized.
         :return:
         '''
         norm_vec = np.array([5e4, 5e4, 5e4, 5e4, 1e2, 5e6]).reshape(1, -1)
-        raw_rep_list = [(self.trading_records[trading_index-9:trading_index+1, :] / norm_vec).reshape(-1) for trading_index in range(self.trading_index-3, self.trading_index+1)]
+        raw_rep_list = [self._get_trade_rep(trading_index) for trading_index in range(self.trading_index-3, self.trading_index+1)]
         raw_rep = np.vstack(raw_rep_list)
         if self.act_count == 0:
             extra_rep = np.array([1, 0, 1, 0, 1, 0, 1, 0])
