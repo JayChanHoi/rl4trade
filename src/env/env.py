@@ -10,9 +10,9 @@ class BitcoinTradeEnv():
 
     def _get_trade_rep(self, trading_index):
         norm_constant = np.array([5e4, 5e4, 5e6]).reshape(1, -1)
-        open = self.trading_records[trading_index-19:trading_index+1, 0]
-        close = self.trading_records[trading_index-19:trading_index+1, 3]
-        volume = self.trading_records[trading_index-19:trading_index+1, -1]
+        open = self.trading_records[trading_index-19:trading_index+1, 0].reshape(-1, 1)
+        close = self.trading_records[trading_index-19:trading_index+1, 3].reshape(-1, 1)
+        volume = self.trading_records[trading_index-19:trading_index+1, -1].reshape(-1, 1)
         trade_rep = np.concatenate([open, close, volume], axis=1)
 
         return (trade_rep / norm_constant).reshape(-1)
