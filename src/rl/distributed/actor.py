@@ -9,6 +9,184 @@ import random
 from ...env.env import BitcoinTradeEnv
 from ..utils import inv_rescale, rescale
 
+class LocalMemory(object):
+    def __init__(self):
+        self.actions = []
+        self.rewards = []
+        self.obs = []
+        self.next_obs = []
+        self.dones = []
+
+    def __len__(self):
+        return len(self.dones)
+
+    def reset(self, num_instance_to_keep=0):
+        if num_instance_to_keep == 0:
+            self.actions = []
+            self.rewards = []
+            self.obs = []
+            self.next_obs = []
+            self.dones = []
+        else:
+            del self.actions[:-num_instance_to_keep]
+            del self.rewards[:-num_instance_to_keep]
+            del self.obs[:-num_instance_to_keep]
+            del self.next_obs[:-num_instance_to_keep]
+            del self.dones[:-num_instance_to_keep]
+
+@ray.remote(num_cpus=1)
+class Actor(object):
+    def __init__(self,
+                 agent_core_net,
+                 actor_id,
+                 actor_total_num,
+                 gamma,
+                 nstep,
+                 actor_update_frequency,
+                 memory_size_bound,
+                 device,
+                 memory_server,
+                 actor_epsilon,
+                 actor_alpha,
+                 parameter_server,
+                 update_lambda,
+                 sequence_length,
+                 hidden_state_dim,
+                 env_config,
+                 trade_data_path):
+        self.actor_net = deepcopy(agent_core_net).cpu()
+        self.actor_net.load_state_dict({k: v.cpu() for k, v in agent_core_net.state_dict().items()})
+        self.actor_net.eval()
+        self.actor_id = actor_id
+        self.actor_total_num = actor_total_num
+        self.gamma = gamma
+        self.nstep = nstep
+        self.actor_update_frequency = actor_update_frequency
+        self.memory_size_bound = memory_size_bound
+        self.device = device
+        self.memory_server = memory_server
+        self.parameter_server = parameter_server
+        self.update_lambda = update_lambda
+        self.sequence_length = sequence_length
+        self.hidden_state_dim = hidden_state_dim
+        self.epsilon = actor_epsilon ** (1 + (actor_id * actor_alpha) / (self.actor_total_num - 1))
+        self.env = BitcoinTradeEnv(trade_data_path, env_config)
+        self.local_memory = LocalMemory()
+        self.episode_count = 0
+        self.act_count = 0
+        self.memory_size_bound = memory_size_bound
+
+    def epsilon_greedy_policy(self, state):
+        if random.random() < self.epsilon:
+            action = torch.from_numpy(self.env.get_action_mask()).float().multinomial(1).item()
+            # action = random.randint(0,2)
+        else:
+            with torch.no_grad():
+                action_value = self.actor_net(state)
+            action = action_value.argmax(dim=2).squeeze().item()
+
+        return action
+
+    def update_agent_from_learner(self):
+        learner_state_dict = ray.get(self.parameters_server.send_latest_parameter_to_actor.remote())
+        self.control_net.load_state_dict({k: (1 - self.update_lambda)*v1 + self.update_lambda*v2 for k, v1, v2 in zip(learner_state_dict.keys(), self.control_net.state_dict().values(), learner_state_dict.values())})
+
+    def transit_to_nstep_return(self, start_index, end_index):
+        sum_rewards = 0
+        next_obs = None
+        dones = False
+        for i, index in enumerate(range(start_index, end_index + 1)):
+            sum_rewards += (self.gamma**i) * self.local_memory.rewards[index]
+            next_obs = self.local_memory.next_obs[index]
+
+            if self.local_memory.dones[index]:
+                dones = True
+                break
+
+        return [sum_rewards, next_obs, dones]
+
+    def compute_local_priority(self, reward, dones, actions, state, next_state):
+        action_value = self.actor_net(state)
+        next_state_action_value = self.actor_net(next_state)
+
+        non_terminal_mask = 1 - dones.float()
+        terminal_mask = dones.float()
+        action_value_target = rescale((reward + (self.gamma ** (self.nstep + 1))*inv_rescale(next_state_action_value.max(dim=1)[0])) * non_terminal_mask + reward * terminal_mask)
+        td_error = (action_value_target - action_value.gather(1, actions.view(-1, 1)).view(-1)).abs() + 0.01
+
+        return list(td_error.split(1))
+
+    def run(self):
+        obs = self.env.reset()
+        step_count = 0
+
+        with torch.no_grad():
+            for _ in count():
+                state = torch.cat(
+                    [
+                        torch.from_numpy(obs).float(),
+                        torch.from_numpy(self.env.get_action_mask()).float().reshape(1, -1).repeat(obs.shape[0], 1)
+                    ],
+                    dim=1
+                )
+                self.local_memory.obs.append(state)
+
+                # sample action
+                action = self.epsilon_greedy_policy(state.unsqueeze(0).unsqueeze(0))
+                self.local_memory.actions.append(action)
+                obs, reward, done, _ = self.env.step(action)
+
+                self.local_memory.rewards.append(reward)
+                self.local_memory.dones.append(done)
+
+                if done:
+                    obs = self.env.reset()
+                    self.episode_count += 1
+                    step_count = 0
+                    self.local_memory.reset(0)
+
+                else:
+                    if self.local_memory.__len__() == 50 + self.nstep:
+                        # transit to multi-step output
+                        actions = []
+                        rewards = []
+                        states = []
+                        next_states = []
+                        dones = []
+                        for start_index in [i for i in range(self.local_memory.__len__())][:-self.nstep]:
+                            end_index = start_index + self.nstep
+                            nstep_return_output = self.transit_to_nstep_return(start_index, end_index)
+                            rewards.append(nstep_return_output[0])
+                            dones.append(nstep_return_output[2])
+                            actions.append(self.local_memory.actions[start_index])
+                            states.append(self.local_memory.obs[start_index])
+                            next_states.append(nstep_return_output[1])
+
+                        # compute priority
+                        priorities = self.compute_local_priority(
+                            reward=torch.tensor(rewards, dtype=torch.float),
+                            dones=torch.tensor(dones, dtype=torch.bool),
+                            actions=torch.tensor(actions).long(),
+                            state=torch.stack(states, dim=0).unsqueeze(0),
+                            next_state=torch.stack(next_states, dim=0).unsqueeze(0)
+                        )
+                        self.memory_server.receive_sample_from_actor.remote([
+                            [torch.tensor(actions).long()],
+                            [torch.tensor(rewards, dtype=torch.float)],
+                            [torch.stack(states, dim=0)],
+                            [torch.stack(next_states, dim=0)],
+                            [torch.tensor(dones, dtype=torch.bool)],
+                            priorities
+                        ])
+
+                        self.local_memory.reset(self.nstep)
+
+                if self.act_count % self.actor_update_frequency == 0 and self.act_count > 0:
+                    self.update_agent_from_learner()
+
+                step_count += 1
+                self.act_count += 1
+
 class LocalMemoryR2D2(object):
     def __init__(self):
         self.actions = []
