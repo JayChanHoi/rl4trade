@@ -10,7 +10,7 @@ from .rl.distributed.parameter_server import ParameterServer
 from .rl.distributed.memory_server import MemoryServer
 from .rl.utils import write_config, resume
 from .agc_utils.agc import AGC
-from .rl.model.qnet import LSTMQNet
+from .rl.model.qnet import LSTMQNet, QNet
 from .env.env import BitcoinTradeEnv
 
 import os
@@ -43,11 +43,13 @@ def distributed_train(train_config):
 
     writer = SummaryWriter('tensorboard/{}'.format(train_config.model_name))
     write_config(writer, train_config, eval_env.env_config)
-    agent_core_net = LSTMQNet(
-        train_config.dropout_p,
-        hist_length=4,
-        num_layer=train_config.num_layer
-    )
+    # agent_core_net = LSTMQNet(
+    #     train_config.dropout_p,
+    #     hist_length=4,
+    #     num_layer=train_config.num_layer
+    # )
+
+    agent_core_net = QNet(train_config.dropout_p)
 
     if train_config.resume != '':
         resume(agent_core_net, device, train_config.resume)

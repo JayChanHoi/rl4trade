@@ -27,8 +27,7 @@ class StateEncoder(nn.Module):
         return self.encoder_net(x)
 
 class QNet():
-    def __init__(self,
-                 dropout_p):
+    def __init__(self, dropout_p):
         super(QNet, self).__init__()
         self.state_encoder = StateEncoder(dropout_p)
         self.state_layer = nn.Sequential(
