@@ -5,29 +5,60 @@ class StateEncoder(nn.Module):
         super(StateEncoder, self).__init__()
         self.encoder_net = nn.Sequential(
             nn.Linear(62, 48),
-            # nn.ReLU(),
-            # nn.Dropout(dropout_p),
-            # nn.Linear(48, 48),
+            nn.ReLU(),
+            nn.Dropout(dropout_p),
+            nn.Linear(48, 48),
             # nn.ReLU(),
             # nn.Dropout(dropout_p),
             # nn.Linear(48, 48),
             nn.ReLU(),
             nn.Dropout(dropout_p),
             nn.Linear(48, 32),
-            # nn.ReLU(),
-            # nn.Dropout(dropout_p),
-            # nn.Linear(32, 32),
+            nn.ReLU(),
+            nn.Dropout(dropout_p),
+            nn.Linear(32, 32),
             # nn.ReLU(),
             # nn.Dropout(dropout_p),
             # nn.Linear(32, 32),
             nn.ReLU(),
-            nn.Dropout(dropout_p),
-            nn.Linear(32, 16),
-            nn.ReLU()
         )
 
     def forward(self, x):
         return self.encoder_net(x)
+
+class QNet():
+    def __init__(self,
+                 dropout_p):
+        super(QNet, self).__init__()
+        self.state_encoder = StateEncoder(dropout_p)
+        self.state_layer = nn.Sequential(
+            nn.Linear(32, 16),
+            nn.ReLU(),
+            nn.Dropout(dropout_p),
+            nn.Linear(16, 1)
+        )
+
+        self.action_layer = nn.Sequential(
+            nn.Linear(32, 16),
+            nn.ReLU(),
+            nn.Dropout(dropout_p),
+            nn.Linear(16, 3)
+        )
+
+    def forward(self, x):
+        b = x.shape[0]
+        l = x.shape[1]
+
+        x_reshape = x[:, :, :, :-3].reshape(-1, 62)
+        mask = x[:, :, 0, -3:]
+        encoded_state = self.state_encoder(x_reshape).reshape(b, l, -1)
+
+        state_value = self.state_layer(encoded_state)
+        action_value = self.action_layer(encoded_state)
+        q_value = (state_value + (action_value - action_value.mean(dim=1, keepdim=True)))
+        q_value = q_value + (1 - mask) * (-1e33)
+
+        return q_value
 
 class LSTMQNet(nn.Module):
     def __init__(self,
