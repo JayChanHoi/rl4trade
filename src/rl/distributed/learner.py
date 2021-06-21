@@ -103,11 +103,11 @@ class Learner(object):
         is_weight = ((priority_prob * self.memory_size_bound) ** self.priority_beta).reciprocal_()
         normalized_is_weight = is_weight / is_weight.max()
 
-        action_value = self.agent_core_net([batch_memory[2]])
+        action_value = self.agent_core_net(batch_memory[2])
 
         with torch.no_grad():
-            next_state_action_value = self.target_net([batch_memory[3]])
-            learner_next_state_max_action_value = self.agent_core_net([batch_memory[3]])
+            next_state_action_value = self.target_net(batch_memory[3])
+            learner_next_state_max_action_value = self.agent_core_net(batch_memory[3])
             learner_next_state_max_action = learner_next_state_max_action_value.argmax(dim=1, keepdim=True)
 
         rewards_ = batch_memory[1]
