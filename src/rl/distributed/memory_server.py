@@ -42,7 +42,7 @@ class GlobalMemory(object):
             idxs.append(idx)
 
         batch_memory = [
-            torch.cat(actions, dim=0).detach(),
+            torch.tensor(actions, dtype=torch.long).detach(),
             torch.tensor(rewards, dtype=torch.float).detach(),
             torch.stack(states, dim=0).detach(),
             torch.stack(next_states, dim=0).detach(),
