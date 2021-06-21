@@ -161,6 +161,7 @@ if __name__ == '__main__':
         print(reward)
         print(done)
         print(bitcon_trade_env.total_capital_history[-1])
+        print(state.shape)
         print('-------------------------------------------------------------------------------')
         if done:
             break

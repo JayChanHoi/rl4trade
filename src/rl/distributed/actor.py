@@ -79,7 +79,7 @@ class Actor(object):
         else:
             with torch.no_grad():
                 action_value = self.actor_net(state)
-            action = action_value.argmax(dim=2).squeeze().item()
+            action = action_value.argmax(dim=1).squeeze().item()
 
         return action
 
@@ -128,7 +128,7 @@ class Actor(object):
                 self.local_memory.obs.append(state)
 
                 # sample action
-                action = self.epsilon_greedy_policy(state.unsqueeze(0).unsqueeze(0))
+                action = self.epsilon_greedy_policy(state.unsqueeze(0))
                 self.local_memory.actions.append(action)
                 obs, reward, done, _ = self.env.step(action)
 

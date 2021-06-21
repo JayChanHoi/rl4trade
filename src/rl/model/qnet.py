@@ -31,26 +31,31 @@ class QNet(nn.Module):
         super(QNet, self).__init__()
         self.state_encoder = StateEncoder(dropout_p)
         self.state_layer = nn.Sequential(
-            nn.Linear(32, 16),
+            nn.Linear(4*32, 64),
             nn.ReLU(),
             nn.Dropout(dropout_p),
-            nn.Linear(16, 1)
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Dropout(dropout_p),
+            nn.Linear(32, 1)
         )
 
         self.action_layer = nn.Sequential(
-            nn.Linear(32, 16),
+            nn.Linear(4*32, 64),
             nn.ReLU(),
             nn.Dropout(dropout_p),
-            nn.Linear(16, 3)
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Dropout(dropout_p),
+            nn.Linear(32, 3)
         )
 
     def forward(self, x):
         b = x.shape[0]
-        l = x.shape[1]
 
-        x_reshape = x[:, :, :, :-3].reshape(-1, 62)
-        mask = x[:, :, 0, -3:]
-        encoded_state = self.state_encoder(x_reshape).reshape(b, l, -1)
+        x_reshape = x[:, :, :-3].reshape(-1, 62)
+        mask = x[:, 0, -3:]
+        encoded_state = self.state_encoder(x_reshape).reshape(b, -1)
 
         state_value = self.state_layer(encoded_state)
         action_value = self.action_layer(encoded_state)

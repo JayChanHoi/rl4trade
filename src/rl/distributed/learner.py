@@ -70,7 +70,7 @@ class Learner(object):
             )
 
             if qnet is not None:
-                action_value = qnet(state.unsqueeze(0).unsqueeze(0).cuda())
+                action_value = qnet(state.unsqueeze(0).cuda())
                 action = action_value.argmax(dim=2).squeeze().item()
             else:
                 # sample action
@@ -103,11 +103,11 @@ class Learner(object):
         is_weight = ((priority_prob * self.memory_size_bound) ** self.priority_beta).reciprocal_()
         normalized_is_weight = is_weight / is_weight.max()
 
-        action_value, _ = self.agent_core_net([batch_memory[2]])
+        action_value = self.agent_core_net([batch_memory[2]])
 
         with torch.no_grad():
-            next_state_action_value, _ = self.target_net([batch_memory[3]])
-            learner_next_state_max_action_value, _ = self.agent_core_net([batch_memory[3]])
+            next_state_action_value = self.target_net([batch_memory[3]])
+            learner_next_state_max_action_value = self.agent_core_net([batch_memory[3]])
             learner_next_state_max_action = learner_next_state_max_action_value.argmax(dim=1, keepdim=True)
 
         rewards_ = batch_memory[1]

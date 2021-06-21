@@ -5,7 +5,7 @@ def read_bitcoin_history(path):
     df = pd.read_csv(path)
     df_trim = df[['date', 'open', 'high', 'low', 'close', 'Volume BTC', 'Volume USDT']]
     inverted_df_trim = df_trim.sort_index(ascending=False)
-    trading_record_matrix = inverted_df_trim[['open', 'high', 'low', 'close', 'Volume BTC', 'Volume USDT']].as_matrix()
+    trading_record_matrix = inverted_df_trim[['open', 'high', 'low', 'close', 'Volume BTC', 'Volume USDT']].to_numpy()
 
     return trading_record_matrix
 
