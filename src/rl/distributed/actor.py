@@ -50,8 +50,6 @@ class Actor(object):
                  actor_alpha,
                  parameter_server,
                  update_lambda,
-                 sequence_length,
-                 hidden_state_dim,
                  env_config,
                  trade_data_path):
         self.actor_net = deepcopy(agent_core_net).cpu()
@@ -67,8 +65,6 @@ class Actor(object):
         self.memory_server = memory_server
         self.parameter_server = parameter_server
         self.update_lambda = update_lambda
-        self.sequence_length = sequence_length
-        self.hidden_state_dim = hidden_state_dim
         self.epsilon = actor_epsilon ** (1 + (actor_id * actor_alpha) / (self.actor_total_num - 1))
         self.env = BitcoinTradeEnv(trade_data_path, env_config)
         self.local_memory = LocalMemory()
