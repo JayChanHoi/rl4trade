@@ -171,8 +171,8 @@ class Actor(object):
                             reward=torch.tensor(rewards, dtype=torch.float),
                             dones=torch.tensor(dones, dtype=torch.bool),
                             actions=torch.tensor(actions).long(),
-                            state=torch.stack(states, dim=0).unsqueeze(0),
-                            next_state=torch.stack(next_states, dim=0).unsqueeze(0)
+                            state=torch.stack(states, dim=0),
+                            next_state=torch.stack(next_states, dim=0)
                         )
                         self.memory_server.receive_sample_from_actor.remote([
                             [torch.tensor(actions).long()],
