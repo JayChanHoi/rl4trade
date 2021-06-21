@@ -126,7 +126,7 @@ class Learner(object):
         self.optimizer.step()
 
         if self.train_count > 0 and self.train_count % 10:
-            self.parameters_server.update_ps_state_dict.remote({k:v.cpu() for k, v in self.agent_core_net.state_dict().items()})
+            self.parameter_server.update_ps_state_dict.remote({k:v.cpu() for k, v in self.agent_core_net.state_dict().items()})
 
         if self.train_count % self.target_net_update_frequency == 0 and self.train_count > 0:
             self.target_net.load_state_dict({k: (1 - self.update_lambda)*v1 + self.update_lambda*v2 for k, v1, v2 in zip(self.agent_core_net.state_dict().keys(), self.target_net.state_dict().values(), self.agent_core_net.state_dict().values())})
