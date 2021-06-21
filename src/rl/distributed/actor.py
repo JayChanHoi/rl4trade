@@ -84,7 +84,7 @@ class Actor(object):
         return action
 
     def update_agent_from_learner(self):
-        learner_state_dict = ray.get(self.parameters_server.send_latest_parameter_to_actor.remote())
+        learner_state_dict = ray.get(self.parameter_server.send_latest_parameter_to_actor.remote())
         self.control_net.load_state_dict({k: (1 - self.update_lambda)*v1 + self.update_lambda*v2 for k, v1, v2 in zip(learner_state_dict.keys(), self.control_net.state_dict().values(), learner_state_dict.values())})
 
     def transit_to_nstep_return(self, start_index, end_index):
