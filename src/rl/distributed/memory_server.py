@@ -56,8 +56,8 @@ class GlobalMemory(object):
         rewards = sample[1]
         states = sample[2]
         next_states = sample[3]
-        dones = sample[10]
-        priorities = sample[11]
+        dones = sample[4]
+        priorities = sample[5]
 
         for i in range(len(dones)):
             data = (states[i], actions[i], rewards[i], next_states[i], dones[i])
