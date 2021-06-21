@@ -26,7 +26,7 @@ class StateEncoder(nn.Module):
     def forward(self, x):
         return self.encoder_net(x)
 
-class QNet():
+class QNet(nn.Module):
     def __init__(self, dropout_p):
         super(QNet, self).__init__()
         self.state_encoder = StateEncoder(dropout_p)
