@@ -134,6 +134,14 @@ class Actor(object):
 
                 self.local_memory.rewards.append(reward)
                 self.local_memory.dones.append(done)
+                next_state = torch.cat(
+                    [
+                        torch.from_numpy(obs).float(),
+                        torch.from_numpy(self.env.get_action_mask()).float().reshape(1, -1).repeat(obs.shape[0], 1)
+                    ],
+                    dim=1
+                )
+                self.local_memory.next_obs.append(next_state)
 
                 if done:
                     obs = self.env.reset()
