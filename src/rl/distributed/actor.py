@@ -175,11 +175,11 @@ class Actor(object):
                             next_state=torch.stack(next_states, dim=0)
                         )
                         self.memory_server.receive_sample_from_actor.remote([
-                            [torch.tensor(actions).long()],
-                            [torch.tensor(rewards, dtype=torch.float)],
-                            [torch.stack(states, dim=0)],
-                            [torch.stack(next_states, dim=0)],
-                            [torch.tensor(dones, dtype=torch.bool)],
+                            actions,
+                            rewards,
+                            states,
+                            next_states,
+                            dones,
                             priorities
                         ])
 
