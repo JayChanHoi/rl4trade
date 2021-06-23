@@ -11,7 +11,7 @@ from itertools import count
 
 from ..utils import rescale, inv_rescale
 
-@ray.remote(num_cpus=2, num_gpus=1)
+@ray.remote(num_cpus=3, num_gpus=1)
 class Learner(object):
     def __init__(self,
                  eval_env,

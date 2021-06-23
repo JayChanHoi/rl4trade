@@ -170,5 +170,5 @@ if __name__ == '__main__':
     train_config_dict = yaml.load(open(os.path.join(os.getcwd(), 'src/config/train_config.yml'), "r"))
     train_config = namedtuple('train_config', train_config_dict.keys())(**train_config_dict)
 
-    ray.init(num_cpus=int(train_config.actor_total_num * 1.0) + 8, num_gpus=1)
+    ray.init(num_cpus=int(train_config.actor_total_num * 1.0) + 9, num_gpus=1)
     distributed_train(train_config)
