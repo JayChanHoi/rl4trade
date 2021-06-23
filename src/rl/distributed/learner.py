@@ -92,13 +92,13 @@ class Learner(object):
         random_agent_episodic_investment_return = None
 
         # if ray.get(memory_size) >= self.learner_start_update_memory_size:
-        batch_memory, sample_indices, priority = ray.get(self.memory_server.send_sample_to_learner.remote(
+        batch_memory, sample_indices, priority_prob = ray.get(self.memory_server.send_sample_to_learner.remote(
             batch_size=self.batch_size
         ))
         # eg job_obs batch item has shape -> (b, sequence_length, hist_length, job_num, job_feature_dim)
         batch_memory = [item.to(self.device) for item in batch_memory]
-        priority_alpha = torch.tensor(priority, dtype=torch.float32).to(self.device)**self.priority_alpha
-        priority_prob = (priority_alpha / priority_alpha.sum())
+        # priority_alpha = torch.tensor(priority, dtype=torch.float32).to(self.device)**self.priority_alpha
+        # priority_prob = (priority_alpha / priority_alpha.sum())
 
         is_weight = ((priority_prob * self.memory_size_bound) ** self.priority_beta).reciprocal_()
         normalized_is_weight = is_weight / is_weight.max()
