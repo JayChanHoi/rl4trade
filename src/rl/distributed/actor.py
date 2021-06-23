@@ -147,7 +147,6 @@ class Actor(object):
                     obs = self.env.reset()
                     self.episode_count += 1
                     step_count = 0
-                    self.local_memory.reset(0)
 
                 else:
                     if self.local_memory.__len__() == 50 + self.nstep:

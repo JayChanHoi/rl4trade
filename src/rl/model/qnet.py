@@ -60,7 +60,7 @@ class QNet(nn.Module):
         state_value = self.state_layer(encoded_state)
         action_value = self.action_layer(encoded_state)
         q_value = (state_value + (action_value - action_value.mean(dim=1, keepdim=True)))
-        q_value = q_value + (1 - mask) * (-1e33)
+        q_value = q_value + mask.eq(0) * (-1e33)
 
         return q_value
 
