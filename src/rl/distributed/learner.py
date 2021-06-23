@@ -101,7 +101,7 @@ class Learner(object):
         # priority_alpha = torch.tensor(priority, dtype=torch.float32).to(self.device)**self.priority_alpha
         # priority_prob = (priority_alpha / priority_alpha.sum())
 
-        is_weight = ((priority_prob * self.memory_size_bound) ** self.priority_beta).reciprocal_()
+        is_weight = ((priority_prob.to(self.device) * self.memory_size_bound) ** self.priority_beta).reciprocal_()
         normalized_is_weight = is_weight / is_weight.max()
 
         action_value = self.agent_core_net(batch_memory[2])
