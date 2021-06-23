@@ -97,8 +97,8 @@ class Learner(object):
         ))
         # eg job_obs batch item has shape -> (b, sequence_length, hist_length, job_num, job_feature_dim)
         batch_memory = [item.to(self.device) for item in batch_memory]
-        priority_alpha = torch.tensor(priority, dtype=torch.float32)**self.priority_alpha
-        priority_prob = (priority_alpha / priority_alpha.sum()).to(self.device)
+        priority_alpha = torch.tensor(priority, dtype=torch.float32).to(self.device)**self.priority_alpha
+        priority_prob = (priority_alpha / priority_alpha.sum())
 
         is_weight = ((priority_prob * self.memory_size_bound) ** self.priority_beta).reciprocal_()
         normalized_is_weight = is_weight / is_weight.max()
