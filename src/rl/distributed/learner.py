@@ -93,6 +93,7 @@ class Learner(object):
 
         # if ray.get(memory_size) >= self.learner_start_update_memory_size:
         batch_memory, sample_indices, priority_prob = ray.get(self.memory_server.send_sample_to_learner.remote(
+            alpha=self.priority_alpha,
             batch_size=self.batch_size
         ))
         # eg job_obs batch item has shape -> (b, sequence_length, hist_length, job_num, job_feature_dim)
