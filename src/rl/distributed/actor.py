@@ -149,7 +149,7 @@ class Actor(object):
                     step_count = 0
 
                 else:
-                    if self.local_memory.__len__() == 100 + self.nstep:
+                    if self.local_memory.__len__() == 30 + self.nstep:
                         # transit to multi-step output
                         actions = []
                         rewards = []
