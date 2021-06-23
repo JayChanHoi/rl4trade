@@ -61,7 +61,7 @@ class GlobalMemory(object):
             torch.tensor(dones, dtype=torch.bool).detach()
         ]
 
-        return batch_memory, sample_indices, priority_prob
+        return batch_memory, sample_indices, priority_prob[sample_indices]
 
     def add_to_global_memory(self, sample):
         self.actions += sample[0]
