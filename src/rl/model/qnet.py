@@ -1,4 +1,5 @@
 import torch.nn as nn
+import torch
 
 class StateEncoder(nn.Module):
     def __init__(self, dropout_p):
@@ -31,23 +32,15 @@ class QNet(nn.Module):
         super(QNet, self).__init__()
         self.state_encoder = StateEncoder(dropout_p)
         self.state_layer = nn.Sequential(
-            nn.Linear(4*32, 64),
+            nn.Linear(4*32, 128),
             nn.ReLU(),
-            nn.Dropout(dropout_p),
-            nn.Linear(64, 32),
-            nn.ReLU(),
-            nn.Dropout(dropout_p),
-            nn.Linear(32, 1)
+            nn.Linear(128, 1)
         )
 
         self.action_layer = nn.Sequential(
-            nn.Linear(4*32, 64),
+            nn.Linear(4*32, 128),
             nn.ReLU(),
-            nn.Dropout(dropout_p),
-            nn.Linear(64, 32),
-            nn.ReLU(),
-            nn.Dropout(dropout_p),
-            nn.Linear(32, 3)
+            nn.Linear(128, 3)
         )
 
     def forward(self, x):
@@ -71,30 +64,26 @@ class LSTMQNet(nn.Module):
                  num_layer=1):
         super(LSTMQNet, self).__init__()
         self.state_encoder = StateEncoder(dropout_p)
-        self.temporal_encoder = nn.LSTM(
+        self.temporal_encoder = nn.LSTMCell(
             input_size=16*hist_length,
-            hidden_size=512,
-            batch_first=True,
-            num_layers=num_layer
+            hidden_size=512
         )
 
         self.state_layer = nn.Sequential(
-            nn.Linear(512, 256),
+            nn.Linear(512, 512),
             nn.ReLU(),
-            nn.Dropout(dropout_p),
-            nn.Linear(256, 1)
+            nn.Linear(512, 1)
         )
 
         self.action_layer = nn.Sequential(
-            nn.Linear(512, 256),
+            nn.Linear(512, 512),
             nn.ReLU(),
-            nn.Dropout(dropout_p),
-            nn.Linear(256, 3)
+            nn.Linear(512, 3)
         )
 
         self.hist_length = hist_length
 
-    def forward(self, x, hidden_state):
+    def forward(self, x, hidden_states_tuple):
         """
         """
         b = x.shape[0]
@@ -104,13 +93,19 @@ class LSTMQNet(nn.Module):
         mask = x[:, :, 0, -3:]
         encoded_state = self.state_encoder(x_reshape).reshape(b, l, -1)
 
-        self.temporal_encoder.flatten_parameters()
-        temporal_out, last_hidden_state = self.temporal_encoder(encoded_state, hidden_state)
+        hns, cns = hidden_states_tuple
+        hn = None
+        cn = None
+        temporal_output_list = []
+        for iter in range(l):
+            hn, cn = self.temporal_encoder(encoded_state[:, iter, :], (hns[iter, 0, :, :], cns[iter, 0, :, :]))
+            temporal_output_list.append(hn)
+        temporal_output = torch.stack(temporal_output_list, dim=1)
 
-        state_value = self.state_layer(temporal_out.reshape(-1, temporal_out.shape[-1]))
-        action_value = self.action_layer(temporal_out.reshape(-1, temporal_out.shape[-1]))
+        state_value = self.state_layer(temporal_output.reshape(-1, temporal_output.shape[-1]))
+        action_value = self.action_layer(temporal_output.reshape(-1, temporal_output.shape[-1]))
         q_value = (state_value + (action_value - action_value.mean(dim=1, keepdim=True)))
         q_value = q_value.reshape(b, l, action_value.shape[-1]) + (1 - mask) * (-1e33)
         # q_value = q_value.reshape(b, l, action_value.shape[-1])
 
-        return q_value, last_hidden_state
+        return q_value, (hn.unsqueeze(0), cn.unsqueeze(0))
