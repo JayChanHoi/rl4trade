@@ -147,8 +147,6 @@ class Learner(object):
 @ray.remote(num_cpus=2, num_gpus=1)
 class LearnerR2D2(object):
     def __init__(self,
-                 eval_env,
-                 eval_frequency,
                  memory_server,
                  parameter_server,
                  device,
@@ -184,8 +182,6 @@ class LearnerR2D2(object):
         self.update_lambda = update_lambda
         self.optimizer = optimizer
         self.model_name = model_name
-        self.eval_frequency = eval_frequency
-        self.eval_env = eval_env
         self.hidden_state_dim = hidden_state_dim
         self.num_layer = num_layer
         self.sequence_length = sequence_length

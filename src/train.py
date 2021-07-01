@@ -81,7 +81,8 @@ def distributed_train(train_config):
                                  trade_data_path=data_path,
                                  sequence_length=train_config.sequence_length,
                                  hidden_state_dim=train_config.hidden_state_dim,
-                                 num_layer=train_config.num_layer)
+                                 num_layer=train_config.num_layer,
+                                 burn_in_length=train_config.burn_in_length)
         # actor = Actor.remote(agent_core_net=agent_core_net,
         #                      memory_server=memory_server,
         #                      parameter_server=parameter_server,
@@ -115,7 +116,8 @@ def distributed_train(train_config):
                                  nstep=train_config.nstep,
                                  hidden_state_dim=train_config.hidden_state_dim,
                                  sequence_length=train_config.sequence_length,
-                                 num_layer=train_config.num_layer)
+                                 num_layer=train_config.num_layer,
+                                 burn_in_length=train_config.burn_in_length)
 
     evaluator = EvaluatorR2D2.remote(num_layer=train_config.num_layer,
                                      parameters_server=parameters_server,
