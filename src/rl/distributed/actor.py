@@ -318,7 +318,7 @@ class ActorR2D2():
         sequential_cns = []
         if done:
             for start_index in [i for i in range(len(self.local_memory))]:
-                if self.burn_in_length <= start_index < len(self.local_memory) - 1:
+                if self.burn_in_length <= start_index < len(self.local_memory) - self.nstep - 1 :
                     end_index = start_index + self.nstep
                     nstep_return_output = self.transit_to_nstep_return(start_index, end_index)
                     sequential_reward.append(nstep_return_output[0])
@@ -410,7 +410,7 @@ class ActorR2D2():
                     if self.local_memory.__len__() == self.sequence_length + self.burn_in_length + self.nstep + 1:
                         # transit to multi-step output
                         self.send_to_memory_pool(done=False)
-                        self.local_memory.reset((self.nsteps + self.burn_in_length + self.sequence_length + 1) // 2)
+                        self.local_memory.reset((self.nstep + self.burn_in_length + self.sequence_length + 1) // 2)
 
                 if self.act_count % self.actor_update_frequency == 0 and self.act_count > 0:
                     self.update_agent_from_learner()
