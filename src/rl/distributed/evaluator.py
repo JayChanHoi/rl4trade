@@ -43,7 +43,7 @@ class EvaluatorR2D2(object):
             )
 
             if qnet is not None:
-                action_value, hidden_state = qnet(state.unsqueeze(0).unsqueeze(0).cuda(), (hn, cn))
+                action_value, hidden_state = qnet(state.unsqueeze(0).unsqueeze(0).cuda(), (hn.unsqueeze(0), cn.unsqueeze(0)))
                 action = action_value.argmax(dim=2).squeeze().item()
             else:
                 # sample action
