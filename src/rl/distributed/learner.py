@@ -238,7 +238,7 @@ class LearnerR2D2(object):
         with torch.no_grad():
             priority = (0.9 * td_error.abs().max(dim=1)[0] + (1 - 0.9) * td_error.abs().mean(dim=1)).cpu()
             self.memory_server.update_priority.remote(priority, sample_indices)
-            self.memory_server.trim_excessive_sample.remote()
+            self.memory_server.trim_global_memory.remote()
 
         self.optimizer.zero_grad()
         loss = (normalized_is_weight * (td_error**2).mean(dim=1)).mean()
