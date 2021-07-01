@@ -195,7 +195,8 @@ class LocalMemoryR2D2(object):
         self.actions = []
         self.rewards = []
         self.obs = []
-        self.hidden_state_buffer = []
+        self.hns_buffer = []
+        self.cns_buffer = []
         self.dones = []
 
     def __len__(self):
@@ -206,13 +207,15 @@ class LocalMemoryR2D2(object):
             self.actions = []
             self.rewards = []
             self.obs = []
-            self.hidden_state_buffer = []
+            self.hns_buffer = []
+            self.cns_buffer = []
             self.dones = []
         else:
             del self.actions[:-num_instance_to_keep]
             del self.rewards[:-num_instance_to_keep]
             del self.obs[:-num_instance_to_keep]
-            del self.hidden_state_buffer[:-num_instance_to_keep]
+            del self.hns_buffer[:-num_instance_to_keep]
+            del self.cns_buffer[:-num_instance_to_keep]
             del self.dones[:-num_instance_to_keep]
 
 @ray.remote(num_cpus=1)
@@ -235,7 +238,8 @@ class ActorR2D2():
                  hidden_state_dim,
                  env_config,
                  trade_data_path,
-                 num_layer):
+                 num_layer,
+                 burn_in_length=1):
         self.actor_net = deepcopy(agent_core_net).cpu()
         self.actor_net.load_state_dict({k: v.cpu() for k, v in agent_core_net.state_dict().items()})
         self.actor_net.eval()
@@ -251,6 +255,7 @@ class ActorR2D2():
         self.update_lambda = update_lambda
         self.sequence_length = sequence_length
         self.hidden_state_dim = hidden_state_dim
+        self.burn_in_length = burn_in_length
         self.num_layer = num_layer
         self.epsilon = actor_epsilon ** (1 + (actor_id * actor_alpha) / (self.actor_total_num - 1))
         self.env = BitcoinTradeEnv(trade_data_path, env_config)
@@ -259,8 +264,9 @@ class ActorR2D2():
         self.act_count = 0
 
     def epsilon_greedy_policy(self, state, hidden_state):
+        hn, cn = hidden_state
         with torch.no_grad():
-            action_value, hidden_state_output = self.actor_net(state, hidden_state)
+            action_value, (hn, cn) = self.actor_net(state, (hn.unsqueeze(0), cn.unsqueeze(0)))
 
         if random.random() < self.epsilon:
             action = torch.from_numpy(self.env.get_action_mask()).float().multinomial(1).item()
@@ -268,7 +274,7 @@ class ActorR2D2():
         else:
             action = action_value.argmax(dim=2).squeeze().item()
 
-        return action, hidden_state_output
+        return action, (hn, cn)
 
     def update_agent_from_learner(self):
         learner_state_dict = ray.get(self.parameter_server.send_latest_parameter_to_actor.remote())
@@ -286,26 +292,85 @@ class ActorR2D2():
 
         return [sum_rewards, dones]
 
-    def compute_local_priority(self, reward, dones, actions, sequential_state_input, sequential_initial_hidden_state):
-        action_value, _ = self.actor_net(sequential_state_input, sequential_initial_hidden_state)
+    def compute_local_priority(self, reward, dones, actions, sequential_state_input, sequential_hidden_state):
+        hns = sequential_hidden_state[0]
+        cns = sequential_hidden_state[1]
+        action_value, _ = self.actor_net(sequential_state_input, (torch.stack(hns, dim=0), torch.stack(cns, dim=0)))
         action_value = action_value.squeeze()
 
-        dones_ = dones[20+self.nstep+1:]
-        reward_ = reward[20:-self.nstep-1]
+        dones_ = dones[self.burn_in_length+self.nstep+1:]
+        reward_ = reward[self.burn_in_length:-self.nstep-1]
         non_terminal_mask = 1 - dones_.float()
         terminal_mask = dones_.float()
-        action_value_target = rescale((reward_ + (self.gamma ** (self.nstep + 1))*inv_rescale(action_value[20+self.nstep+1:, :].max(dim=1)[0])) * non_terminal_mask + reward_ * terminal_mask)
+        action_value_target = rescale((reward_ + (self.gamma ** (self.nstep + 1))*inv_rescale(action_value[self.burn_in_length+self.nstep+1:, :].max(dim=1)[0])) * non_terminal_mask + reward_ * terminal_mask)
 
-        td_error = (action_value_target - action_value[20+self.nstep+1:, :].gather(1, actions[20+self.nstep+1:].view(-1, 1)).view(-1)).abs() + 0.01
+        td_error = (action_value_target - action_value[self.burn_in_length+self.nstep+1:, :].gather(1, actions[self.burn_in_length+self.nstep+1:].view(-1, 1)).view(-1)).abs() + 0.01
         priority = (0.9 * td_error.max() + 0.1 * td_error.mean()).view(1)
 
         return priority
 
+    def send_to_memory_pool(self, done):
+        sequential_action = []
+        sequential_reward = []
+        sequential_state = []
+        sequential_dones = []
+        sequential_hns = []
+        sequential_cns = []
+        if done:
+            for start_index in [i for i in range(len(self.local_memory))]:
+                if self.burn_in_length <= start_index < len(self.local_memory) - 1:
+                    end_index = start_index + self.nstep
+                    nstep_return_output = self.transit_to_nstep_return(start_index, end_index)
+                    sequential_reward.append(nstep_return_output[0])
+                    sequential_dones.append(nstep_return_output[1])
+                else:
+                    sequential_reward.append(self.local_memory.rewards[start_index])
+                    sequential_dones.append(self.local_memory.dones[start_index])
+
+                sequential_action.append(self.local_memory.actions[start_index])
+                sequential_state.append(self.local_memory.obs[start_index])
+                sequential_hns.append(self.local_memory.hns_buffer[start_index])
+                sequential_cns.append(self.local_memory.cns_buffer[start_index])
+
+        else:
+            for start_index in [i for i in range(self.sequence_length + self.burn_in_length + self.nstep + 1)]:
+                if self.burn_in_length <= start_index < self.sequence_length + self.burn_in_length:
+                    end_index = start_index + self.nstep
+                    nstep_return_output = self.transit_to_nstep_return(start_index, end_index)
+                    sequential_reward.append(nstep_return_output[0])
+                    sequential_dones.append(nstep_return_output[1])
+                else:
+                    sequential_reward.append(self.local_memory.rewards[start_index])
+                    sequential_dones.append(self.local_memory.dones[start_index])
+
+                sequential_action.append(self.local_memory.actions[start_index])
+                sequential_state.append(self.local_memory.obs[start_index])
+                sequential_hns.append(self.local_memory.hns_buffer[start_index])
+                sequential_cns.append(self.local_memory.cns_buffer[start_index])
+
+            # compute priority
+            sequential_priority = self.compute_local_priority(
+                reward=torch.tensor(sequential_reward, dtype=torch.float),
+                dones=torch.tensor(sequential_dones, dtype=torch.bool),
+                actions=torch.tensor(sequential_action).long(),
+                sequential_state_input=torch.stack(sequential_state, dim=0).unsqueeze(0),
+                sequential_hidden_state=(self.local_memory.hns_buffer, self.local_memory.cns_buffer)
+            )
+            self.memory_server.receive_sample_from_actor.remote([
+                [torch.tensor(sequential_action).long()],
+                [torch.tensor(sequential_reward, dtype=torch.float)],
+                [torch.stack(sequential_state, dim=0)],
+                [torch.tensor(sequential_dones, dtype=torch.bool)],
+                [torch.stack(sequential_hns, dim=0)],
+                [torch.stack(sequential_cns, dim=0)],
+                [sequential_priority]
+            ])
 
     def run(self):
         obs = self.env.reset()
-        hidden_state = (torch.zeros(self.num_layer, 1, self.hidden_state_dim), torch.zeros(self.num_layer, 1, self.hidden_state_dim))
-        self.local_memory.hidden_state_buffer.append(hidden_state)
+        hn, cn = (torch.zeros(self.num_layer, 1, self.hidden_state_dim), torch.zeros(self.num_layer, 1, self.hidden_state_dim))
+        self.local_memory.hns_buffer.append(hn)
+        self.local_memory.cns_buffer.append(cn)
         step_count = 0
 
         for _ in count():
@@ -320,9 +385,10 @@ class ActorR2D2():
                 self.local_memory.obs.append(state)
 
                 # sample action
-                action, hidden_state = self.epsilon_greedy_policy(state.unsqueeze(0).unsqueeze(0), hidden_state)
+                action, (hn, cn) = self.epsilon_greedy_policy(state.unsqueeze(0).unsqueeze(0), (hn, cn))
                 self.local_memory.actions.append(action)
-                self.local_memory.hidden_state_buffer.append(hidden_state)
+                self.local_memory.hns_buffer.append(hn)
+                self.local_memory.cns_buffer.append(cn)
 
                 obs, reward, done, _ = self.env.step(action)
 
@@ -330,52 +396,21 @@ class ActorR2D2():
                 self.local_memory.dones.append(done)
 
                 if done:
+                    self.send_to_memory_pool(done=True)
                     obs = self.env.reset()
                     self.episode_count += 1
                     step_count = 0
 
-                    hidden_state = (torch.zeros(self.num_layer, 1, self.hidden_state_dim), torch.zeros(self.num_layer, 1, self.hidden_state_dim))
-                    self.local_memory.hidden_state_buffer.append(hidden_state)
+                    hn, cn = (torch.zeros(self.num_layer, 1, self.hidden_state_dim), torch.zeros(self.num_layer, 1, self.hidden_state_dim))
                     self.local_memory.reset(0)
+                    self.local_memory.hns_buffer.append(hn)
+                    self.local_memory.cns_buffer.append(cn)
 
                 else:
-                    if self.local_memory.__len__() == self.sequence_length + 20 + self.nstep + 1:
+                    if self.local_memory.__len__() == self.sequence_length + self.burn_in_length + self.nstep + 1:
                         # transit to multi-step output
-                        sequential_action = []
-                        sequential_reward = []
-                        sequential_state = []
-                        sequential_dones = []
-                        for start_index in [i for i in range(self.sequence_length + 20 + self.nstep + 1)]:
-                            if  20 <= start_index < self.sequence_length + 20:
-                                end_index = start_index + self.nstep
-                                nstep_return_output = self.transit_to_nstep_return(start_index, end_index)
-                                sequential_reward.append(nstep_return_output[0])
-                                sequential_dones.append(nstep_return_output[1])
-                            else:
-                                sequential_reward.append(self.local_memory.rewards[start_index])
-                                sequential_dones.append(self.local_memory.dones[start_index])
-
-                            sequential_action.append(self.local_memory.actions[start_index])
-                            sequential_state.append(self.local_memory.obs[start_index])
-
-                        # compute priority
-                        sequential_priority = self.compute_local_priority(
-                            reward=torch.tensor(sequential_reward, dtype=torch.float),
-                            dones=torch.tensor(sequential_dones, dtype=torch.bool),
-                            actions=torch.tensor(sequential_action).long(),
-                            sequential_state_input=torch.stack(sequential_state, dim=0).unsqueeze(0),
-                            sequential_initial_hidden_state=self.local_memory.hidden_state_buffer[0]
-                        )
-                        self.memory_server.receive_sample_from_actor.remote([
-                            [torch.tensor(sequential_action).long()],
-                            [torch.tensor(sequential_reward, dtype=torch.float)],
-                            [torch.stack(sequential_state, dim=0)],
-                            [torch.tensor(sequential_dones, dtype=torch.bool)],
-                            [self.local_memory.hidden_state_buffer[0]],
-                            [sequential_priority]
-                        ])
-
-                        self.local_memory.reset(self.nstep+self.sequence_length)
+                        self.send_to_memory_pool(done=False)
+                        self.local_memory.reset((self.nsteps + self.burn_in_length + self.sequence_length + 1) // 2)
 
                 if self.act_count % self.actor_update_frequency == 0 and self.act_count > 0:
                     self.update_agent_from_learner()

@@ -11,7 +11,7 @@ from itertools import count
 
 from ..utils import rescale, inv_rescale
 
-@ray.remote(num_cpus=3, num_gpus=1)
+@ray.remote(num_cpus=1, num_gpus=1)
 class Learner(object):
     def __init__(self,
                  eval_env,
@@ -165,7 +165,8 @@ class LearnerR2D2(object):
                  priority_alpha=0.6,
                  priority_beta=0.4,
                  hidden_state_dim=512,
-                 sequence_length=30):
+                 sequence_length=30,
+                 burn_in_length=1):
         self.memory_server = memory_server
         self.parameter_server = parameter_server
         self.agent_core_net = agent_core_net
@@ -188,6 +189,7 @@ class LearnerR2D2(object):
         self.hidden_state_dim = hidden_state_dim
         self.num_layer = num_layer
         self.sequence_length = sequence_length
+        self.burn_in_length = burn_in_length
         if torch.cuda.is_available():
             self.agent_core_net.cuda()
             self.target_net.cuda()
@@ -195,47 +197,7 @@ class LearnerR2D2(object):
         self.agent_core_net.train()
         self.target_net.eval()
 
-    def eval(self, qnet):
-        obs = self.eval_env.reset()
-
-        reward_list = []
-        episode_length = 0
-        if qnet is not None:
-            hidden_state = (torch.zeros(self.num_layer, 1, self.hidden_state_dim, device=self.device), torch.zeros(self.num_layer, 1, self.hidden_state_dim, device=self.device))
-
-        for iter in count():
-            state = torch.cat(
-                [
-                    torch.from_numpy(obs).float(),
-                    torch.from_numpy(self.eval_env.get_action_mask()).float().reshape(1, -1).repeat(obs.shape[0], 1)
-                ],
-                dim=1
-            )
-
-            if qnet is not None:
-                action_value, hidden_state = qnet(state.unsqueeze(0).unsqueeze(0).cuda(), hidden_state)
-                action = action_value.argmax(dim=2).squeeze().item()
-            else:
-                # sample action
-                action = torch.from_numpy(self.eval_env.get_action_mask()).float().multinomial(1).item()
-                # action = random.randint(0,2)
-
-            obs, reward, done, _ = self.eval_env.step(action)
-            reward_list.append(reward)
-            episode_length += 1
-
-            if done:
-                episode_reward = np.sum(reward_list) / (episode_length)
-                torch.cuda.empty_cache()
-                return [episode_reward, (self.eval_env.total_capital_history[-1] - self.eval_env.total_capital_history[0])/ 10000]
-
     def run(self):
-        learner_expected_reward = None
-        learner_episodic_investment_return = None
-        random_agent_expected_reward = None
-        random_agent_episodic_investment_return = None
-
-        # if ray.get(memory_size) >= self.learner_start_update_memory_size:
         batch_memory, sample_indices, priority_prob = ray.get(self.memory_server.send_sample_to_learner.remote(
             alpha=self.priority_alpha,
             batch_size=self.batch_size
@@ -248,37 +210,34 @@ class LearnerR2D2(object):
         is_weight = ((priority_prob * self.memory_size_bound) ** priority_beta).reciprocal_()
         normalized_is_weight = is_weight / is_weight.max()
 
-        with torch.no_grad():
-            burn_in_state = batch_memory[2][:, :20, :, :]
-
-            _, core_net_burn_in_final_hidden_state = self.agent_core_net(
-                burn_in_state,
-                (batch_memory[4], batch_memory[5])
-            )
-
-        update_state = batch_memory[2][:, 20:-(self.nsteps+1), :, :]
-        action_value, final_hidden_state = self.agent_core_net(update_state, core_net_burn_in_final_hidden_state)
+        update_state = batch_memory[2][:, self.burn_in_length:-(self.nsteps+1), :, :]
+        core_net_hns = batch_memory[4][self.burn_in_length:-(self.nsteps+1), :, :, :]
+        core_net_cns = batch_memory[5][self.burn_in_length:-(self.nsteps+1), :, :, :]
+        action_value, final_hidden_state = self.agent_core_net(update_state, (core_net_hns, core_net_cns))
 
         with torch.no_grad():
             traget_net_action_value, _ = self.target_net(
-                batch_memory[2][:, 20+self.nsteps+1:, :, :],
+                batch_memory[2][:, :, :, :],
                 (batch_memory[4], batch_memory[5])
             )
+            self.agent_core_net.eval()
             action_value_extra, _ = self.agent_core_net(
                 batch_memory[2][:, -(self.nsteps+1):, :, :],
-                final_hidden_state
+                (batch_memory[4][-(self.nsteps+1):, :, :, :], batch_memory[5][-(self.nsteps+1):, :, :, :])
             )
 
             learner_action_value_for_max_action = torch.cat([action_value, action_value_extra], dim=1)[:, self.nsteps+1:, :]
             learner_max_action = learner_action_value_for_max_action.argmax(dim=2, keepdim=True)
 
-        rewards_ = batch_memory[1][:, 20:-(self.nsteps+1)]
-        dones_ = batch_memory[-3][:, 20+(self.nsteps+1):]
+            self.agent_core_net.train()
+
+        rewards_ = batch_memory[1][:, self.burn_in_length:-(self.nsteps+1)]
+        dones_ = batch_memory[-3][:, self.burn_in_length+(self.nsteps+1):]
         # dones_ -> shape :(b. sequence_length)
         non_terminal_mask = 1 - dones_.float()
         terminal_mask = dones_.float()
         action_value_target = rescale((rewards_ + (self.gamma ** (self.nsteps + 1))*(inv_rescale(traget_net_action_value.gather(2, learner_max_action)).squeeze())) * non_terminal_mask + rewards_ * terminal_mask)
-        td_error = (action_value_target - action_value.gather(2, batch_memory[0][:, 20:-(self.nsteps+1)].unsqueeze(-1)).squeeze())
+        td_error = (action_value_target - action_value.gather(2, batch_memory[0][:, self.burn_in_length:-(self.nsteps+1)].unsqueeze(-1)).squeeze())
 
         with torch.no_grad():
             priority = (0.9 * td_error.abs().max(dim=1)[0] + (1 - 0.9) * td_error.abs().mean(dim=1)).cpu()
@@ -297,23 +256,7 @@ class LearnerR2D2(object):
         if self.train_count % self.target_net_update_frequency == 0 and self.train_count > 0:
             self.target_net.load_state_dict({k: (1 - self.update_lambda)*v1 + self.update_lambda*v2 for k, v1, v2 in zip(self.agent_core_net.state_dict().keys(), self.target_net.state_dict().values(), self.agent_core_net.state_dict().values())})
 
-        if self.train_count % self.eval_frequency == 0 and self.train_count > 0:
-            with torch.no_grad():
-                self.agent_core_net.eval()
-                learner_expected_reward, learner_episodic_investment_return = self.eval(self.agent_core_net)
-                random_agent_expected_reward, random_agent_episodic_investment_return = self.eval(None)
-
         self.agent_core_net.train()
-        if self.train_count % 5000 == 0 and self.train_count > 0:
-            checkpoint_dict = {'train_iter': self.train_count, 'state_dict': self.agent_core_net.state_dict()}
-            torch.save(
-                checkpoint_dict,
-                os.path.join(
-                    'checkpoint/{}'.format(self.model_name),
-                    '{}_checkpoint_episode_{}.pth'.format('distributed_dqn', self.train_count + 1)
-                )
-            )
-
         self.train_count += 1
 
-        return l, learner_expected_reward, learner_episodic_investment_return, random_agent_expected_reward, random_agent_episodic_investment_return, self.train_count
+        return l, self.train_count
