@@ -65,7 +65,7 @@ class LSTMQNet(nn.Module):
         super(LSTMQNet, self).__init__()
         self.state_encoder = StateEncoder(dropout_p)
         self.temporal_encoder = nn.LSTMCell(
-            input_size=16*hist_length,
+            input_size=32*hist_length,
             hidden_size=512
         )
 
