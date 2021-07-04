@@ -86,7 +86,7 @@ class LSTMQNet(nn.Module):
         b = x.shape[0]
         l = x.shape[1]
 
-        x_reshape = x[:, :, :, :-3].reshape(-1, 62)
+        x_reshape = x[:, :, :, :-3].reshape(-1, 182)
         mask = x[:, :, 0, -3:]
         encoded_state = self.state_encoder(x_reshape).reshape(b, l, -1)
 
