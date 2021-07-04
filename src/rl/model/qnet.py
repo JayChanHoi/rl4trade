@@ -19,6 +19,21 @@ class StateEncoder(nn.Module):
             nn.Dropout(dropout_p),
             nn.Linear(128, 64),
             nn.ReLU(),
+            nn.Dropout(dropout_p),
+            nn.Linear(64, 64),
+            nn.ReLU(),
+            nn.Dropout(dropout_p),
+            nn.Linear(64, 64),
+            nn.ReLU(),
+            nn.Dropout(dropout_p),
+            nn.Linear(64, 64),
+            nn.ReLU(),
+            nn.Dropout(dropout_p),
+            nn.Linear(64, 64),
+            nn.ReLU(),
+            nn.Dropout(dropout_p),
+            nn.Linear(64, 64),
+            nn.ReLU(),
         )
 
     def forward(self, x):
