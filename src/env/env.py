@@ -7,7 +7,7 @@ class BitcoinTradeEnv():
         self.trading_open_price = self.trading_records[:, 0]
         self.trading_close_price = self.trading_records[:, -3]
         self.env_config = env_config
-        self.reset()
+        # self.reset()
 
     def _get_trade_rep(self, trading_index):
         norm_constant = np.array([5e4, 5e4, 5e6]).reshape(1, -1)

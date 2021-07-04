@@ -25,6 +25,7 @@ class EvaluatorR2D2(object):
         self.evaluation_agent = agent_core_net
         self.evaluation_agent.eval()
         self.eval_env = env
+        self.eval_env.reset()
 
     def eval(self, qnet):
         obs = self.eval_env.reset_but_not_sampling_new_trading_index()
