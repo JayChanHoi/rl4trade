@@ -22,7 +22,7 @@ class BitcoinTradeEnv():
         the obs is not yet normalized.
         :return:
         '''
-        raw_rep_list = [self._get_trade_rep(trading_index) for trading_index in range(self.trading_index-7, self.trading_index+1)]
+        raw_rep_list = [self._get_trade_rep(trading_index) for trading_index in range(self.trading_index-3, self.trading_index+1)]
         raw_rep = np.vstack(raw_rep_list)
         if self.act_count == 0:
             extra_rep = np.array([1, 0, 1, 0, 1, 0, 1, 0])
