@@ -7,6 +7,7 @@ class BitcoinTradeEnv():
         self.trading_open_price = self.trading_records[:, 0]
         self.trading_close_price = self.trading_records[:, -3]
         self.env_config = env_config
+        self.reset()
 
     def _get_trade_rep(self, trading_index):
         norm_constant = np.array([5e4, 5e4, 5e6]).reshape(1, -1)
@@ -80,6 +81,17 @@ class BitcoinTradeEnv():
         self.asset_cash_history = [[self.current_cash_value, self.current_asset_unit]]
         self.total_capital_history = [self.current_cash_value]
         self.trading_index = np.random.randint(60+3, self.trading_records.shape[0] - self.env_config.episode_length)
+        self.obs = self._prep_obs()
+
+        return self.obs
+
+    def reset_but_not_sampling_new_trading_index(self):
+        self.act_count = 0
+        self.current_cash_value = self.env_config.initial_cash_value
+        self.current_asset_unit = 0
+        self.asset_cash_history = [[self.current_cash_value, self.current_asset_unit]]
+        self.total_capital_history = [self.current_cash_value]
+        self.trading_index -= self.env_config.episode_length
         self.obs = self._prep_obs()
 
         return self.obs

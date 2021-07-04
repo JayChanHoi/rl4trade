@@ -27,7 +27,7 @@ class EvaluatorR2D2(object):
         self.eval_env = env
 
     def eval(self, qnet):
-        obs = self.eval_env.reset()
+        obs = self.eval_env.reset_but_not_sampling_new_trading_index()
 
         reward_list = []
         episode_length = 0
