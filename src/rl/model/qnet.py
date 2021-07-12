@@ -6,7 +6,7 @@ class ResidualMLPBlock(nn.Module):
         super(ResidualMLPBlock, self).__init__()
         self.block = nn.Sequential(
             nn.Linear(128, 128),
-            nn.LeakyReLU(inplace=True),
+            nn.LeakyReLU(),
             nn.Dropout(dropout_p),
             nn.Linear(128, 128)
             )
@@ -18,26 +18,26 @@ class StateEncoder(nn.Module):
     def __init__(self, dropout_p):
         super(StateEncoder, self).__init__()
         self.fc_1 = nn.Linear(182, 128)
-        self.relu_1 = nn.ReLU(inplace=True)
+        self.relu_1 = nn.ReLU()
 
         self.residual_blocks = [ResidualMLPBlock(dropout_p) for _ in range(5)]
         self.non_linearities = [nn.ReLU() for _ in range(5)]
 
         self.fc_last = nn.Linear(128, 64)
-        self.relu_last = nn.ReLU(inplace=True)
+        self.relu_last = nn.ReLU()
 
     def forward(self, x):
-        x = self.fc_1(x)
-        x = self.relu_1(x)
+        x_ = self.fc_1(x)
+        x_ = self.relu_1(x_)
 
         for block, func in zip(self.residual_blocks, self.non_linearities):
-            x += block(x)
-            x = func(x)
+            x_ += block(x_)
+            x_ = func(x_)
 
-        x = self.fc_last(x)
-        out = self.relu_last(x)
+        x_ = self.fc_last(x_)
+        x_ = self.relu_last(x_)
 
-        return out
+        return x_
 
 class QNet(nn.Module):
     def __init__(self, dropout_p):
