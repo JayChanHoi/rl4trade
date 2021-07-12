@@ -165,7 +165,8 @@ class LearnerR2D2(object):
                  priority_beta=0.4,
                  hidden_state_dim=512,
                  sequence_length=30,
-                 burn_in_length=1):
+                 burn_in_length=1,
+                 gradient_norm_clip=1.0):
         self.memory_server = memory_server
         self.parameter_server = parameter_server
         self.agent_core_net = agent_core_net
@@ -245,7 +246,7 @@ class LearnerR2D2(object):
         loss = (normalized_is_weight * (td_error**2).mean(dim=1)).mean()
         l = loss.item()
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(self.agent_core_net.parameters(), 40)
+        torch.nn.utils.clip_grad_norm_(self.agent_core_net.parameters(), )
         self.optimizer.step()
 
         if self.train_count > 0 and self.train_count % 10:

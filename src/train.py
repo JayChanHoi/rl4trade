@@ -117,7 +117,8 @@ def distributed_train(train_config):
                                  hidden_state_dim=train_config.hidden_state_dim,
                                  sequence_length=train_config.sequence_length,
                                  num_layer=train_config.num_layer,
-                                 burn_in_length=train_config.burn_in_length)
+                                 burn_in_length=train_config.burn_in_length,
+                                 gradient_norm_clip=train_config.gradient_norm_clip)
 
     evaluator = EvaluatorR2D2.remote(num_layer=train_config.num_layer,
                                      parameters_server=parameters_server,

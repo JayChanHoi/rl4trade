@@ -1,21 +1,22 @@
 # R2D2 setting
 hidden_state_dim: 512
-sequence_length: 40
+sequence_length: 160
 burn_in_length: 1
 num_layer: 1
 
-batch_size: 512
-lr: 0.0000625
+batch_size: 64
+lr: 0.0001
 agc_clipping: 0.02
+gradient_norm_clip: 1.0
 gamma: 0.995
 dropout_p: 0.1
 eval_frequency: 100
 actor_update_frequency: 500
-learner_start_update_memory_size: 20000
-model_name: R2D2_4_14_1
+learner_start_update_memory_size: 2000
+model_name: R2D2_7_12_14
 resume: ''
 
-memory_size_bound: 350000
+memory_size_bound: 27000
 priority_alpha: 0.9
 priority_beta: 0.4
 nstep: 4
