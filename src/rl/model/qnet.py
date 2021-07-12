@@ -10,9 +10,16 @@ class ResidualMLPBlock(nn.Module):
             nn.Dropout(dropout_p),
             nn.Linear(128, 128)
             )
+        self.relu = nn.ReLU()
 
     def forward(self, x):
-        return self.block(x)
+        identity = x
+
+        out = self.block(x)
+        out += identity
+        out = self.relu(out)
+
+        return out
 
 class StateEncoder(nn.Module):
     def __init__(self, dropout_p):
@@ -20,8 +27,7 @@ class StateEncoder(nn.Module):
         self.fc_1 = nn.Linear(182, 128)
         self.relu_1 = nn.ReLU()
 
-        self.residual_blocks = [ResidualMLPBlock(dropout_p) for _ in range(5)]
-        self.non_linearities = [nn.ReLU() for _ in range(5)]
+        self.residual_blocks = nn.ModuleList(ResidualMLPBlock(dropout_p) for _ in range(5))
 
         self.fc_last = nn.Linear(128, 64)
         self.relu_last = nn.ReLU()
@@ -30,9 +36,8 @@ class StateEncoder(nn.Module):
         x_ = self.fc_1(x)
         x_ = self.relu_1(x_)
 
-        for block, func in zip(self.residual_blocks, self.non_linearities):
-            x_ += block(x_)
-            x_ = func(x_)
+        for block in self.residual_blocks:
+            x_ = block(x_)
 
         x_ = self.fc_last(x_)
         x_ = self.relu_last(x_)
