@@ -1,43 +1,43 @@
 import torch.nn as nn
 import torch
 
+class ResidualMLPBlock(nn.Module):
+    def __init__(self, dropout_p):
+        super(ResidualMLPBlock, self).__init__()
+        self.block = nn.Sequential(
+            nn.Linear(128, 128),
+            nn.LeakyReLU(inplace=True),
+            nn.Dropout(dropout_p),
+            nn.Linear(128, 128)
+            )
+
+    def forward(self, x):
+        return self.block(x)
+
 class StateEncoder(nn.Module):
     def __init__(self, dropout_p):
         super(StateEncoder, self).__init__()
-        self.encoder_net = nn.Sequential(
-            nn.Linear(182, 128),
-            nn.ReLU(),
-            nn.Dropout(dropout_p),
-            nn.Linear(128, 128),
-            nn.ReLU(),
-            nn.Dropout(dropout_p),
-            nn.Linear(128, 128),
-            nn.ReLU(),
-            nn.Dropout(dropout_p),
-            nn.Linear(128, 128),
-            nn.ReLU(),
-            nn.Dropout(dropout_p),
-            # nn.Linear(128, 128),
-            # nn.ReLU(),
-            # nn.Dropout(dropout_p),
-            # nn.Linear(128, 128),
-            # nn.ReLU(),
-            # nn.Dropout(dropout_p),
-            # nn.Linear(128, 128),
-            # nn.ReLU(),
-            # nn.Dropout(dropout_p),
-            nn.Linear(128, 128),
-            nn.ReLU(),
-            nn.Dropout(dropout_p),
-            nn.Linear(128, 128),
-            nn.ReLU(),
-            nn.Dropout(dropout_p),
-            nn.Linear(128, 64),
-            nn.ReLU(),
-        )
+        self.fc_1 = nn.Linear(182, 128)
+        self.relu_1 = nn.ReLU(inplace=True)
+
+        self.residual_blocks = [ResidualMLPBlock(dropout_p) for _ in range(5)]
+        self.non_linearities = [nn.ReLU() for _ in range(5)]
+
+        self.fc_last = nn.Linear(128, 64)
+        self.relu_last = nn.ReLU(inplace=True)
 
     def forward(self, x):
-        return self.encoder_net(x)
+        x = self.fc_1(x)
+        x = self.relu_1(x)
+
+        for block, func in zip(self.residual_blocks, self.non_linearities):
+            x += block(x)
+            x = func(x)
+
+        x = self.fc_last(x)
+        out = self.relu_last(x)
+
+        return out
 
 class QNet(nn.Module):
     def __init__(self, dropout_p):
