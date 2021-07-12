@@ -245,6 +245,7 @@ class LearnerR2D2(object):
         loss = (normalized_is_weight * (td_error**2).mean(dim=1)).mean()
         l = loss.item()
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(self.agent_core_net.parameters(), 40)
         self.optimizer.step()
 
         if self.train_count > 0 and self.train_count % 10:
