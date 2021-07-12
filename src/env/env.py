@@ -70,9 +70,14 @@ class BitcoinTradeEnv():
         return obs
 
     def get_action_mask(self):
-        mask = [1, self.current_cash_value - self.trading_open_price[self.trading_index+1], self.current_asset_unit - self.env_config.position_amount]
+        mask_rep = [
+            1,
+            self.current_cash_value - self.trading_open_price[self.trading_index+1] * self.env_config.position_amount - self.env_config.trade_cost,
+            (self.current_cash_value - self.env_config.trade_cost) + (self.current_asset_unit * self.trading_open_price[self.trading_index+1])
+        ]
+        mask =  np.greater_equal(np.array(mask_rep), 0)
 
-        return np.greater_equal(np.array(mask), 0)
+        return mask
 
     def reset(self):
         self.act_count = 0
@@ -110,15 +115,15 @@ class BitcoinTradeEnv():
         elif action == 1:
             if self.current_cash_value >= self.trading_open_price[self.trading_index+1]:
                 self.current_asset_unit += self.env_config.position_amount
-                self.current_cash_value -= self.trading_open_price[self.trading_index+1] * self.env_config.position_amount - self.env_config.trade_cost
+                self.current_cash_value -= (self.trading_open_price[self.trading_index+1] * self.env_config.position_amount + self.env_config.trade_cost)
             else:
                 reward -= 1
         elif action == 2:
-            if self.current_asset_unit >= self.env_config.position_amount:
-                self.current_cash_value += self.trading_open_price[self.trading_index+1] * self.env_config.position_amount - self.env_config.trade_cost
-                self.current_asset_unit -= self.env_config.position_amount
-            else:
-                reward -= 1
+            # if self.current_asset_unit >= self.env_config.position_amount:
+            self.current_asset_unit -= self.env_config.position_amount
+            self.current_cash_value += (self.trading_open_price[self.trading_index+1] * self.env_config.position_amount - self.env_config.trade_cost)
+            # else:
+            #     reward -= 1
         else:
             raise ValueError('action should only be picked from 0, 1, 2')
 
