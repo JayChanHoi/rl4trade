@@ -46,10 +46,10 @@ class EvaluatorR2D2(object):
 
             if qnet is not None:
                 action_value, (hn, cn) = qnet(state.unsqueeze(0).unsqueeze(0).cuda(), (hn.unsqueeze(0), cn.unsqueeze(0)))
-                # if random.random() < 0.025:
-                #     action = torch.from_numpy(self.eval_env.get_action_mask()).float().multinomial(1).item()
-                # else:
-                action = action_value.argmax(dim=2).squeeze().item()
+                if random.random() < 0.01:
+                    action = torch.from_numpy(self.eval_env.get_action_mask()).float().multinomial(1).item()
+                else:
+                    action = action_value.argmax(dim=2).squeeze().item()
             else:
                 # sample action
                 action = torch.from_numpy(self.eval_env.get_action_mask()).float().multinomial(1).item()
