@@ -57,7 +57,7 @@ def distributed_train(train_config):
         resume(agent_core_net, device, train_config.resume)
 
     optimizer = torch.optim.Adam(agent_core_net.parameters(), train_config.lr, eps=1.5e-4)
-    optimizer = AGC(optim=optimizer, clipping=train_config.agc_clipping)
+    # optimizer = AGC(optim=optimizer, clipping=train_config.agc_clipping)
 
     parameters_server = ParameterServer.remote({k: v.cpu() for k, v in agent_core_net.state_dict().items()})
     memory_server = MemoryServer.remote(train_config.memory_size_bound)
