@@ -6,11 +6,11 @@ class ResidualMLPBlock(nn.Module):
         super(ResidualMLPBlock, self).__init__()
         self.block = nn.Sequential(
             nn.Linear(128, 128),
-            nn.LeakyReLU(),
+            nn.ReLU(inplace=True),
             nn.Dropout(dropout_p),
             nn.Linear(128, 128)
             )
-        self.relu = nn.ReLU()
+        self.relu = nn.ReLU(inplace=True)
 
     def forward(self, x):
         identity = x
@@ -25,12 +25,12 @@ class StateEncoder(nn.Module):
     def __init__(self, dropout_p):
         super(StateEncoder, self).__init__()
         self.fc_1 = nn.Linear(182, 128)
-        self.relu_1 = nn.ReLU()
+        self.relu_1 = nn.ReLU(inplace=True)
 
-        self.residual_blocks = nn.ModuleList(ResidualMLPBlock(dropout_p) for _ in range(5))
+        self.residual_blocks = nn.ModuleList([ResidualMLPBlock(dropout_p) for _ in range(3)])
 
         self.fc_last = nn.Linear(128, 64)
-        self.relu_last = nn.ReLU()
+        self.relu_last = nn.ReLU(inplace=True)
 
     def forward(self, x):
         x_ = self.fc_1(x)
