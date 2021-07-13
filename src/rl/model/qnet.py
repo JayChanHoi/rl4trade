@@ -27,7 +27,7 @@ class StateEncoder(nn.Module):
         self.fc_1 = nn.Linear(182, 128)
         self.relu_1 = nn.ReLU(inplace=True)
 
-        self.residual_blocks = nn.ModuleList([ResidualMLPBlock(dropout_p) for _ in range(3)])
+        self.residual_blocks = nn.ModuleList([ResidualMLPBlock(dropout_p) for _ in range(5)])
 
         self.fc_last = nn.Linear(128, 64)
         self.relu_last = nn.ReLU(inplace=True)
