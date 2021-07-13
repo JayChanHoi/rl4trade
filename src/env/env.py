@@ -72,8 +72,16 @@ class BitcoinTradeEnv():
     def get_action_mask(self):
         mask_rep = [
             1,
-            self.current_cash_value - self.trading_open_price[self.trading_index+1] * self.env_config.position_amount - self.env_config.trade_cost,
-            (self.current_cash_value - self.env_config.trade_cost) + (self.current_asset_unit * self.trading_open_price[self.trading_index+1])
+            self.current_cash_value - self.trading_open_price[self.trading_index+1] * self.env_config.position_amount * 1 - self.env_config.trade_cost,
+            self.current_cash_value - self.trading_open_price[self.trading_index+1] * self.env_config.position_amount * 2 - self.env_config.trade_cost,
+            self.current_cash_value - self.trading_open_price[self.trading_index+1] * self.env_config.position_amount * 3 - self.env_config.trade_cost,
+            self.current_cash_value - self.trading_open_price[self.trading_index+1] * self.env_config.position_amount * 4 - self.env_config.trade_cost,
+            self.current_cash_value - self.trading_open_price[self.trading_index+1] * self.env_config.position_amount * 5 - self.env_config.trade_cost,
+            (self.current_cash_value - self.env_config.trade_cost) + (self.current_asset_unit * self.trading_open_price[self.trading_index+1]) -  self.trading_open_price[self.trading_index+1] * self.env_config.position_amount * 1,
+            (self.current_cash_value - self.env_config.trade_cost) + (self.current_asset_unit * self.trading_open_price[self.trading_index+1]) -  self.trading_open_price[self.trading_index+1] * self.env_config.position_amount * 2,
+            (self.current_cash_value - self.env_config.trade_cost) + (self.current_asset_unit * self.trading_open_price[self.trading_index+1]) -  self.trading_open_price[self.trading_index+1] * self.env_config.position_amount * 3,
+            (self.current_cash_value - self.env_config.trade_cost) + (self.current_asset_unit * self.trading_open_price[self.trading_index+1]) -  self.trading_open_price[self.trading_index+1] * self.env_config.position_amount * 4,
+            (self.current_cash_value - self.env_config.trade_cost) + (self.current_asset_unit * self.trading_open_price[self.trading_index+1]) -  self.trading_open_price[self.trading_index+1] * self.env_config.position_amount * 5,
         ]
         mask =  np.greater_equal(np.array(mask_rep), 0)
 
@@ -113,17 +121,35 @@ class BitcoinTradeEnv():
         if action == 0:
             pass
         elif action == 1:
-            if self.current_cash_value >= self.trading_open_price[self.trading_index+1]:
-                self.current_asset_unit += self.env_config.position_amount
-                self.current_cash_value -= (self.trading_open_price[self.trading_index+1] * self.env_config.position_amount + self.env_config.trade_cost)
-            else:
-                reward -= 1
+            self.current_asset_unit += self.env_config.position_amount
+            self.current_cash_value -= (self.trading_open_price[self.trading_index+1] * self.env_config.position_amount + self.env_config.trade_cost)
         elif action == 2:
-            # if self.current_asset_unit >= self.env_config.position_amount:
+            self.current_asset_unit += self.env_config.position_amount * 2
+            self.current_cash_value -= (self.trading_open_price[self.trading_index+1] * self.env_config.position_amount * 2 + self.env_config.trade_cost)
+        elif action == 3:
+            self.current_asset_unit += self.env_config.position_amount * 3
+            self.current_cash_value -= (self.trading_open_price[self.trading_index+1] * self.env_config.position_amount * 3 + self.env_config.trade_cost)
+        elif action == 4:
+            self.current_asset_unit += self.env_config.position_amount * 4
+            self.current_cash_value -= (self.trading_open_price[self.trading_index+1] * self.env_config.position_amount * 4 + self.env_config.trade_cost)
+        elif action == 5:
+            self.current_asset_unit += self.env_config.position_amount * 5
+            self.current_cash_value -= (self.trading_open_price[self.trading_index+1] * self.env_config.position_amount * 5 + self.env_config.trade_cost)
+        elif action == 6:
             self.current_asset_unit -= self.env_config.position_amount
             self.current_cash_value += (self.trading_open_price[self.trading_index+1] * self.env_config.position_amount - self.env_config.trade_cost)
-            # else:
-            #     reward -= 1
+        elif action == 7:
+            self.current_asset_unit -= self.env_config.position_amount * 2
+            self.current_cash_value += (self.trading_open_price[self.trading_index+1] * self.env_config.position_amount * 2 - self.env_config.trade_cost)
+        elif action == 8:
+            self.current_asset_unit -= self.env_config.position_amount * 3
+            self.current_cash_value += (self.trading_open_price[self.trading_index+1] * self.env_config.position_amount * 3 - self.env_config.trade_cost)
+        elif action == 9:
+            self.current_asset_unit -= self.env_config.position_amount * 4
+            self.current_cash_value += (self.trading_open_price[self.trading_index+1] * self.env_config.position_amount * 4 - self.env_config.trade_cost)
+        elif action == 10:
+            self.current_asset_unit -= self.env_config.position_amount * 5
+            self.current_cash_value += (self.trading_open_price[self.trading_index+1] * self.env_config.position_amount * 5 - self.env_config.trade_cost)
         else:
             raise ValueError('action should only be picked from 0, 1, 2')
 
@@ -137,6 +163,9 @@ class BitcoinTradeEnv():
             done = True
 
         return reward, done
+
+    def get_action_number(self):
+        return self.get_action_mask().shape[0]
 
     def step(self, action):
         '''

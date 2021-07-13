@@ -57,14 +57,14 @@ class QNet(nn.Module):
         self.action_layer = nn.Sequential(
             nn.Linear(4*32, 128),
             nn.ReLU(),
-            nn.Linear(128, 3)
+            nn.Linear(128, 11)
         )
 
     def forward(self, x):
         b = x.shape[0]
 
-        x_reshape = x[:, :, :-3].reshape(-1, 62)
-        mask = x[:, 0, -3:]
+        x_reshape = x[:, :, :-11].reshape(-1, 62)
+        mask = x[:, 0, -11:]
         encoded_state = self.state_encoder(x_reshape).reshape(b, -1)
 
         state_value = self.state_layer(encoded_state)
@@ -95,7 +95,7 @@ class LSTMQNet(nn.Module):
         self.action_layer = nn.Sequential(
             nn.Linear(512, 512),
             nn.ReLU(),
-            nn.Linear(512, 3)
+            nn.Linear(512, 11)
         )
 
         self.hist_length = hist_length
@@ -106,8 +106,8 @@ class LSTMQNet(nn.Module):
         b = x.shape[0]
         l = x.shape[1]
 
-        x_reshape = x[:, :, :, :-3].reshape(-1, 182)
-        mask = x[:, :, 0, -3:]
+        x_reshape = x[:, :, :, :-11].reshape(-1, 182)
+        mask = x[:, :, 0, -11:]
         encoded_state = self.state_encoder(x_reshape).reshape(b, l, -1)
 
         hns, cns = hidden_states_tuple
@@ -123,6 +123,5 @@ class LSTMQNet(nn.Module):
         action_value = self.action_layer(temporal_output.reshape(-1, temporal_output.shape[-1]))
         q_value = (state_value + (action_value - action_value.mean(dim=1, keepdim=True)))
         q_value = q_value.reshape(b, l, action_value.shape[-1]) + (1 - mask) * (-1e33)
-        # q_value = q_value.reshape(b, l, action_value.shape[-1])
 
         return q_value, (hn.unsqueeze(0), cn.unsqueeze(0))
