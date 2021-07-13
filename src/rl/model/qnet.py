@@ -89,10 +89,16 @@ class LSTMQNet(nn.Module):
         self.state_layer = nn.Sequential(
             nn.Linear(512, 512),
             nn.ReLU(),
+            nn.Dropout(dropout_p),
+            nn.Linear(512, 512),
+            nn.ReLU(),
             nn.Linear(512, 1)
         )
 
         self.action_layer = nn.Sequential(
+            nn.Linear(512, 512),
+            nn.ReLU(),
+            nn.Dropout(dropout_p),
             nn.Linear(512, 512),
             nn.ReLU(),
             nn.Linear(512, 11)
