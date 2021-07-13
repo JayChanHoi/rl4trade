@@ -188,6 +188,7 @@ class LearnerR2D2(object):
         self.num_layer = num_layer
         self.sequence_length = sequence_length
         self.burn_in_length = burn_in_length
+        self.gradient_norm_clip = gradient_norm_clip
         if torch.cuda.is_available():
             self.agent_core_net.cuda()
             self.target_net.cuda()
@@ -246,7 +247,7 @@ class LearnerR2D2(object):
         loss = (normalized_is_weight * (td_error**2).mean(dim=1)).mean()
         l = loss.item()
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(self.agent_core_net.parameters(), )
+        torch.nn.utils.clip_grad_norm_(self.agent_core_net.parameters(), self.gradient_norm_clip)
         self.optimizer.step()
 
         if self.train_count > 0 and self.train_count % 10:
